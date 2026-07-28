@@ -1,0 +1,9 @@
+.root {
+  border-radius: 14px;
+  background: #fff5f5;
+  border: 1px solid rgba(232, 89, 12, 0.2);
+}
+
+.title {
+  color: #1a3a5c;
+}

@@ -1,0 +1,50 @@
+.shell {
+  background: #eef3f8;
+  min-height: 100dvh;
+}
+
+.header {
+  background: #fff;
+  border-bottom: 1px solid rgba(26, 58, 92, 0.08);
+  padding-inline: 1.25rem;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 1px 0 rgba(26, 58, 92, 0.04);
+}
+
+.navbar {
+  background: linear-gradient(180deg, #1e4a72 0%, #153556 52%, #122d47 100%);
+  border-right: none;
+}
+
+.main {
+  min-height: calc(100dvh - 60px);
+  padding: 1.25rem 1.35rem 1.75rem;
+  background: #eef3f8;
+  min-width: 0;
+}
+
+@media (min-width: 768px) {
+  .main {
+    padding: 1.35rem 1.75rem 2rem;
+  }
+}
+
+/* Mobile: dim content when drawer menu is open (navbar slides over main) */
+.mobileBackdrop {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  background: rgba(15, 40, 68, 0.45);
+}
+
+@media (min-width: 62em) {
+  .mobileBackdrop {
+    display: none !important;
+  }
+}

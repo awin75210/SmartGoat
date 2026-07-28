@@ -1,0 +1,11 @@
+.page {
+  width: 100%;
+}
+
+.form {
+  max-width: 520px;
+  background: #fff;
+  border: 1px solid rgba(26, 58, 92, 0.08);
+  border-radius: 14px;
+  padding: 1.25rem;
+}

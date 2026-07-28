@@ -1,0 +1,12 @@
+.root {
+  margin-bottom: 0.25rem;
+}
+
+.title {
+  color: #1a3a5c;
+  font-weight: 700;
+}
+
+.actions {
+  flex-shrink: 0;
+}

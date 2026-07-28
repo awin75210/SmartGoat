@@ -1,0 +1,17 @@
+.page {
+  width: 100%;
+}
+
+.card {
+  display: block;
+  background: #fff;
+  border: 1px solid rgba(26, 58, 92, 0.08);
+  border-radius: 12px;
+  padding: 1rem;
+  color: inherit;
+  transition: box-shadow 0.15s ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 12px rgba(26, 58, 92, 0.08);
+}

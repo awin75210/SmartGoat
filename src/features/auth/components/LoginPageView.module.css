@@ -1,0 +1,68 @@
+.page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr;
+  background: #f4f9fd;
+}
+
+.hero {
+  display: none;
+}
+
+.formWrap {
+  padding: 2rem 1.25rem;
+}
+
+.guestLink {
+  font-size: var(--mantine-font-size-sm);
+  color: var(--mantine-color-capraGreen-7);
+  text-decoration: none;
+}
+
+.guestLink:hover {
+  text-decoration: underline;
+}
+
+@media (min-width: 900px) {
+  .page {
+    grid-template-columns: 1.1fr 1fr;
+  }
+
+  .hero {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 3rem;
+    background: linear-gradient(145deg, #e8f4fc 0%, #eefbf3 100%);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .heroArt {
+    position: absolute;
+    inset: auto -10% 0 -10%;
+    height: 45%;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 120'%3E%3Cpath fill='%2343cd78' opacity='0.25' d='M0 80 Q100 40 200 70 T400 60 V120 H0Z'/%3E%3Ccircle cx='320' cy='40' r='28' fill='%232d94e3' opacity='0.15'/%3E%3C/svg%3E")
+      bottom center / cover no-repeat;
+  }
+
+  .heroText {
+    position: relative;
+    z-index: 1;
+  }
+
+  .brand {
+    color: #1a3a5c;
+    font-size: 2.25rem;
+  }
+
+  .formWrap {
+    min-height: 100vh;
+  }
+}
+
+@media (max-width: 899px) {
+  .brand {
+    display: none;
+  }
+}

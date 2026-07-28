@@ -1,0 +1,29 @@
+.card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.label {
+  letter-spacing: 0.01em;
+}
+
+.value {
+  color: #1a3a5c;
+  font-weight: 800;
+  font-size: 1.65rem;
+  line-height: 1.15;
+}
+
+.unit {
+  font-weight: 500;
+}
+
+.trend {
+  color: #2d94e3;
+}
+
+.sparkline {
+  margin-top: auto;
+  padding-top: 0.35rem;
+}

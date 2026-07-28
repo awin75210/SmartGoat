@@ -1,0 +1,87 @@
+.root {
+  padding: 1.1rem 0.85rem 1rem;
+  background: linear-gradient(180deg, #f4f9fd 0%, #eef6fc 100%);
+  border-right: 1px solid rgba(26, 58, 92, 0.08);
+  height: 100%;
+}
+
+.rootFarm {
+  background: transparent;
+  border-right: none;
+}
+
+.brand {
+  padding: 0 0.15rem 0.85rem;
+}
+
+.brandRow {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.logoSvg {
+  flex-shrink: 0;
+}
+
+.brandTitle {
+  color: #1a3a5c;
+  font-size: 1.125rem;
+  line-height: 1.2;
+}
+
+.brandTitleLight {
+  color: #fff;
+  font-size: 1.125rem;
+  line-height: 1.2;
+}
+
+.taglineLight {
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.35;
+  margin-top: 2px;
+}
+
+.navScroll {
+  margin-inline: -0.15rem;
+}
+
+.navLink {
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+.navLink[data-active] {
+  background: var(--mantine-color-capraGreen-6);
+  color: #fff;
+}
+
+.navLinkFarm {
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.92);
+  font-weight: 500;
+  font-size: 0.9375rem;
+  padding-block: 0.55rem;
+}
+
+.navLinkFarm:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.navLinkFarm[data-active] {
+  background: linear-gradient(90deg, #43cd78 0%, #3bc46f 100%);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(67, 205, 120, 0.35);
+}
+
+.navLinkFarm[data-active] svg,
+.navLinkFarm svg {
+  color: inherit;
+}
+
+.sidebarFooter {
+  margin-top: auto;
+  padding: 0.75rem 0.5rem 0.25rem;
+  min-height: 72px;
+  pointer-events: none;
+}

@@ -1,0 +1,33 @@
+.page {
+  width: 100%;
+}
+
+.card {
+  background: #fff;
+  height: 100%;
+}
+
+.title {
+  color: #1a3a5c;
+}
+
+.stat {
+  background: #f4f9fd;
+  border-radius: 10px;
+  padding: 0.75rem;
+}
+
+.statValue {
+  color: #1a3a5c;
+}
+
+.inlineLink {
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+  color: var(--mantine-color-capraGreen-7);
+  text-decoration: none;
+}
+
+.inlineLink:hover {
+  text-decoration: underline;
+}

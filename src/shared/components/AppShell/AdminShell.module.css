@@ -1,0 +1,23 @@
+.shell {
+  background: #f4f9fd;
+  min-height: 100dvh;
+}
+
+.header {
+  background: #fff;
+  border-bottom: 1px solid rgba(26, 58, 92, 0.08);
+  padding-inline: 1rem;
+  display: flex;
+  align-items: center;
+}
+
+.navbar {
+  background: linear-gradient(180deg, #f4f9fd 0%, #eef6fc 100%);
+  border-right: 1px solid rgba(26, 58, 92, 0.08);
+}
+
+.main {
+  min-height: calc(100vh - 56px);
+  min-width: 0;
+  background: #f4f9fd;
+}

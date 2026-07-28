@@ -1,0 +1,9 @@
+.root {
+  border: 1px dashed rgba(26, 58, 92, 0.15);
+  border-radius: 14px;
+  background: rgba(244, 249, 253, 0.6);
+}
+
+.title {
+  color: #1a3a5c;
+}

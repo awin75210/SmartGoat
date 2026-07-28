@@ -1,0 +1,28 @@
+.wrap {
+  align-items: center;
+}
+
+.control {
+  background: #fff;
+  border: 1px solid rgba(26, 58, 92, 0.1);
+  box-shadow: 0 2px 8px rgba(26, 58, 92, 0.05);
+}
+
+.segmentLabel {
+  font-weight: 600;
+  font-size: 0.8125rem;
+}
+
+.customDisabled {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8125rem;
+  color: #5c7a99;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid rgba(26, 58, 92, 0.12);
+  border-radius: 10px;
+  background: #fff;
+  cursor: not-allowed;
+  user-select: none;
+}

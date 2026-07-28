@@ -1,0 +1,34 @@
+.card {
+  height: 100%;
+}
+
+.title {
+  color: #1a3a5c;
+}
+
+.table {
+  min-width: 640px;
+}
+
+.card :global(thead) {
+  background: #f4f9fd;
+}
+
+.card :global(th) {
+  font-size: 0.8125rem;
+  color: #5c7a99;
+  font-weight: 600;
+}
+
+.detailLink {
+  color: #2d94e3;
+}
+
+.footer {
+  margin-top: 0.85rem;
+  text-align: center;
+}
+
+.viewAll {
+  color: #2d94e3;
+}

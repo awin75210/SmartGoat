@@ -1,0 +1,4 @@
+.modal :global(.mantine-Modal-title) {
+  color: #1a3a5c;
+  font-weight: 700;
+}

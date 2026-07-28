@@ -1,0 +1,65 @@
+.root {
+  width: 100%;
+  padding: 0.15rem 0;
+}
+
+.title {
+  color: #1a3a5c;
+  font-size: 1.05rem;
+}
+
+.left {
+  flex: 1;
+  min-width: 0;
+}
+
+.farmChip {
+  max-width: min(100%, 320px);
+  padding: 0.35rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid rgba(26, 58, 92, 0.12);
+  background: #f8fbfe;
+}
+
+.farmIcon {
+  color: #2d94e3;
+  flex-shrink: 0;
+}
+
+.farmName {
+  color: #1a3a5c;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.notifBadge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #e03131;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 17px;
+  text-align: center;
+  border: 2px solid #fff;
+}
+
+.avatar {
+  border: 2px solid rgba(67, 205, 120, 0.35);
+}
+
+.burger {
+  color: #1a3a5c;
+}
+
+@media (min-width: 768px) {
+  .title {
+    font-size: 1.125rem;
+  }
+}

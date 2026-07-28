@@ -1,0 +1,14 @@
+.mobileList {
+  width: 100%;
+}
+
+.mobileCard {
+  border: 1px solid rgba(26, 58, 92, 0.08);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  background: #fff;
+}
+
+.table {
+  font-size: 0.875rem;
+}
