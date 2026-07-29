@@ -2,8 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  ActionIcon,
   Alert,
   Button,
+  Drawer,
   Group,
   Paper,
   ScrollArea,
@@ -12,7 +14,8 @@ import {
   Textarea,
   UnstyledButton,
 } from "@mantine/core";
-import { IconAlertCircle, IconMessagePlus, IconSend } from "@tabler/icons-react";
+import { useDisclosure } from "@mantine/hooks";
+import { IconAlertCircle, IconHistory, IconMessagePlus, IconSend } from "@tabler/icons-react";
 import Link from "next/link";
 import { formatTimeVi } from "@/shared/utils/format";
 import { PageHeader } from "@/shared/components/PageHeader/PageHeader";
@@ -52,6 +55,8 @@ export function AiChatbotPanel({ suggestedPrompts, isGuest, initialConversations
   const scrollRef = useRef<HTMLDivElement>(null);
   const localMsgRef = useRef(0);
   const mountedRef = useRef(true);
+  const [historyOpened, { open: openHistory, close: closeHistory }] = useDisclosure(false);
+  const showSuggestedPrompts = messages.length === 0 && !pending;
 
   useEffect(() => {
     mountedRef.current = true;
@@ -71,6 +76,7 @@ export function AiChatbotPanel({ suggestedPrompts, isGuest, initialConversations
   const selectConversation = async (id: string) => {
     setActiveId(id);
     setError(null);
+    closeHistory();
     setPending(true);
     try {
       const result = await fetchChatMessages(id);
@@ -91,7 +97,34 @@ export function AiChatbotPanel({ suggestedPrompts, isGuest, initialConversations
     setError(null);
     setActiveId(null);
     setMessages([]);
+    closeHistory();
   };
+
+  const conversationList = (
+    <Stack gap={4}>
+      {conversations.length === 0 ? (
+        <Text size="xs" c="dimmed">
+          Chưa có cuộc trò chuyện
+        </Text>
+      ) : (
+        conversations.map((c) => (
+          <UnstyledButton
+            key={c.id}
+            className={`${styles.conversationItem} ${c.id === activeId ? styles.conversationItemActive : ""}`}
+            onClick={() => void selectConversation(c.id)}
+            p="xs"
+          >
+            <Text size="sm" lineClamp={2}>
+              {c.title}
+            </Text>
+            <Text size="xs" c="dimmed">
+              {formatTimeVi(c.updatedAt)}
+            </Text>
+          </UnstyledButton>
+        ))
+      )}
+    </Stack>
+  );
 
   const sendMessage = async (text: string, retry = false) => {
     const trimmed = text.trim();
@@ -221,15 +254,70 @@ export function AiChatbotPanel({ suggestedPrompts, isGuest, initialConversations
   return (
     <Stack gap="md" className={styles.page}>
       <div className={styles.pageTop}>
-        <PageHeader title="CapraCare AI" description="Trợ lý tư vấn chăn nuôi dê" />
-        <Group gap="xs" className={styles.prompts} mt="sm">
-          {suggestedPrompts.map((sp) => (
-            <Button key={sp.id} variant="light" size="xs" onClick={() => void sendMessage(sp.prompt)} disabled={pending}>
-              {sp.label}
-            </Button>
-          ))}
+        <Group justify="space-between" align="center" wrap="nowrap" className={`${styles.topRow} ${styles.mobileTopRow}`}>
+          <div>
+            <Text className={styles.pageTitle}>CapraCare AI</Text>
+          </div>
+          <Group gap={6} className={styles.mobileOnly}>
+            <ActionIcon variant="light" color="teal" size="lg" aria-label="Cuộc trò chuyện mới" onClick={startNewConversation}>
+              <IconMessagePlus size={18} />
+            </ActionIcon>
+            <ActionIcon
+              variant="light"
+              color="gray"
+              size="lg"
+              aria-label="Lịch sử hội thoại"
+              onClick={openHistory}
+            >
+              <IconHistory size={18} />
+            </ActionIcon>
+          </Group>
         </Group>
+        <div className={styles.desktopHeader}>
+          <PageHeader title="CapraCare AI" description="Trợ lý tư vấn chăn nuôi dê" />
+        </div>
+        {showSuggestedPrompts ? (
+          <div className={styles.promptsWrap}>
+            <div className={`${styles.promptsScroll} ${styles.promptsDesktop}`}>
+              {suggestedPrompts.map((sp) => (
+                <Button
+                  key={sp.id}
+                  className={styles.promptChip}
+                  variant="light"
+                  size="xs"
+                  onClick={() => void sendMessage(sp.prompt)}
+                  disabled={pending}
+                >
+                  {sp.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </div>
+
+      <Drawer
+        opened={historyOpened}
+        onClose={closeHistory}
+        title={<span className={styles.historyDrawerTitle}>Lịch sử hội thoại</span>}
+        position="bottom"
+        size="55%"
+        classNames={{ body: styles.drawerList }}
+      >
+        <Button
+          fullWidth
+          leftSection={<IconMessagePlus size={16} />}
+          variant="light"
+          size="xs"
+          mb="sm"
+          onClick={startNewConversation}
+        >
+          Cuộc trò chuyện mới
+        </Button>
+        <ScrollArea h="calc(55dvh - 5rem)" type="scroll" offsetScrollbars>
+          {conversationList}
+        </ScrollArea>
+      </Drawer>
 
       <div className={styles.chatShell}>
         <div className={styles.layout}>
@@ -245,29 +333,7 @@ export function AiChatbotPanel({ suggestedPrompts, isGuest, initialConversations
               Cuộc trò chuyện mới
             </Button>
             <ScrollArea className={styles.sidebarScroll} type="scroll" offsetScrollbars scrollbars="y">
-              <Stack gap={4}>
-                {conversations.length === 0 ? (
-                  <Text size="xs" c="dimmed">
-                    Chưa có cuộc trò chuyện
-                  </Text>
-                ) : (
-                  conversations.map((c) => (
-                    <UnstyledButton
-                      key={c.id}
-                      className={`${styles.conversationItem} ${c.id === activeId ? styles.conversationItemActive : ""}`}
-                      onClick={() => void selectConversation(c.id)}
-                      p="xs"
-                    >
-                      <Text size="sm" lineClamp={2}>
-                        {c.title}
-                      </Text>
-                      <Text size="xs" c="dimmed">
-                        {formatTimeVi(c.updatedAt)}
-                      </Text>
-                    </UnstyledButton>
-                  ))
-                )}
-              </Stack>
+              {conversationList}
             </ScrollArea>
           </Paper>
 
@@ -331,7 +397,7 @@ export function AiChatbotPanel({ suggestedPrompts, isGuest, initialConversations
                   <div ref={scrollRef} />
                 </Stack>
               </ScrollArea>
-              <Group p="md" align="flex-end" className={styles.inputRow}>
+              <Group align="flex-end" wrap="nowrap" className={styles.inputRow}>
                 <Textarea
                   placeholder="Nhập câu hỏi..."
                   value={input}
@@ -349,6 +415,7 @@ export function AiChatbotPanel({ suggestedPrompts, isGuest, initialConversations
                   }}
                 />
                 <Button
+                  className={styles.sendBtnDesktop}
                   leftSection={<IconSend size={16} />}
                   onClick={() => void sendMessage(input)}
                   loading={pending}
@@ -356,6 +423,18 @@ export function AiChatbotPanel({ suggestedPrompts, isGuest, initialConversations
                 >
                   Gửi
                 </Button>
+                <ActionIcon
+                  className={styles.sendBtnMobile}
+                  size="input-lg"
+                  variant="filled"
+                  color="teal"
+                  aria-label="Gửi"
+                  onClick={() => void sendMessage(input)}
+                  loading={pending}
+                  disabled={pending}
+                >
+                  <IconSend size={18} />
+                </ActionIcon>
               </Group>
             </Paper>
           </div>
