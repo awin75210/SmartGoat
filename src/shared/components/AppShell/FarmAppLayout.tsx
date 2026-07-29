@@ -1,7 +1,7 @@
 "use client";
 
 import { AppShell } from "@mantine/core";
-import { logoutAction } from "@/features/auth/actions/login.actions";
+import { useLogout } from "@/features/auth/hooks/use-logout";
 import { FARM_NAV_ITEMS } from "@/shared/constants/navigation";
 import { AppHeader } from "./AppHeader";
 import { SidebarBrand, SidebarDecorFooter, SidebarNavMenu } from "./AppSidebar";
@@ -30,9 +30,7 @@ export function FarmAppLayout({
   isGuest = false,
 }: FarmAppLayoutProps) {
   const { opened, toggle, close } = useMobileNav();
-  const handleLogout = () => {
-    void logoutAction();
-  };
+  const { logout: handleLogout } = useLogout();
 
   return (
     <>

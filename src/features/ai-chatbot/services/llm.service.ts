@@ -1,4 +1,8 @@
 import { getAiApiBaseUrl, getAiApiKey, getAiModel } from "@/lib/supabase/env";
+import {
+  isSmallTalkQuery,
+  pickBestFaqForQuestion,
+} from "../utils/knowledge-retrieval.utils";
 import type { QueryIntent } from "./query-intent.service";
 
 export type LlmCompletionInput = {
@@ -9,37 +13,79 @@ export type LlmCompletionInput = {
   intent: QueryIntent;
 };
 
+function parseFaqsFromKnowledgeBlock(block: string): { question: string; answer: string }[] {
+  const faqs: { question: string; answer: string }[] = [];
+  const chunks = block.split(/\n\n+/);
+  for (const chunk of chunks) {
+    const qMatch = chunk.match(/Hỏi:\s*(.+)/);
+    const aMatch = chunk.match(/Gợi ý nội dung:\s*([\s\S]+)/);
+    if (qMatch && aMatch) {
+      faqs.push({
+        question: qMatch[1].trim(),
+        answer: aMatch[1].trim(),
+      });
+    }
+  }
+  return faqs;
+}
+
 function buildFallbackReply(input: LlmCompletionInput): string {
+  const question = input.userQuestion.trim();
+
+  if (isSmallTalkQuery(question)) {
+    return (
+      "Xin chào! Tôi là CapraCare AI, hỗ trợ tư vấn chăn nuôi dê. " +
+      "Bạn có thể hỏi về khẩu phần, bệnh thường gặp (tiêu chảy, ho sốt…), chăm dê con theo tuổi, hoặc môi trường chuồng."
+    );
+  }
+
   const hasKnowledge =
     !input.knowledgeBlock.includes("(không có mục phù hợp)") &&
     input.knowledgeBlock.includes("KNOWLEDGE_CONTEXT");
 
   if (!hasKnowledge) {
     return (
-      "Hiện tôi chưa tìm thấy kiến thức phù hợp trong hệ thống để trả lời chính xác câu hỏi của bạn. " +
-      "Bạn có thể mô tả thêm triệu chứng, tuổi dê, khẩu phần hoặc điều kiện chuồng để tôi hỗ trợ tốt hơn."
+      `Về câu hỏi 「${question}」, hiện tôi chưa tìm thấy tài liệu phù hợp trong hệ thống. ` +
+      "Bạn mô tả thêm (tuổi dê, triệu chứng, khẩu phần, tình trạng chuồng) hoặc tra Sổ tay điện tử theo danh mục Bệnh / Dinh dưỡng / Dê con."
     );
   }
 
-  const lines = input.knowledgeBlock
-    .split("\n")
-    .filter((l) => l.trim() && !l.startsWith("==="))
-    .slice(0, 6);
+  const faqs = parseFaqsFromKnowledgeBlock(input.knowledgeBlock);
+  const bestFaq = pickBestFaqForQuestion(faqs, question);
 
-  let reply =
-    "Dựa trên tài liệu tham khảo trong CapraCare, bạn có thể cân nhắc các điểm sau:\n\n" +
-    lines.map((l) => `• ${l.trim()}`).join("\n");
+  let reply = `Về câu hỏi của bạn: 「${question}」\n\n`;
+
+  if (bestFaq) {
+    reply += bestFaq.answer;
+  } else {
+    const articleChunk = input.knowledgeBlock
+      .split("=== KNOWLEDGE_CONTEXT (bài viết) ===")[1]
+      ?.split("=== KNOWLEDGE_CONTEXT (FAQ")[0]
+      ?.trim();
+    if (articleChunk) {
+      const firstArticle = articleChunk.split(/\n\n+/)[0]?.replace(/^\[[^\]]+\]\s*/, "");
+      const summaryLine = firstArticle?.split("\n").slice(0, 3).join(" ").trim();
+      if (summaryLine) {
+        reply += summaryLine;
+      }
+    }
+  }
+
+  if (!bestFaq && reply.endsWith("」\n\n")) {
+    reply +=
+      "Tôi tìm thấy tài liệu liên quan nhưng chưa đủ chi tiết cho câu hỏi cụ thể. Hãy diễn đạt lại hoặc bổ sung triệu chứng / giai đoạn nuôi.";
+  }
 
   if (input.farmBlock.includes("FARM_DATA") && !input.farmBlock.includes("(không có")) {
-    reply += "\n\nSố liệu trang trại liên quan:\n" + input.farmBlock.replace(/===.*?===\n?/g, "").trim();
+    reply += `\n\nThông tin trang trại (nếu liên quan):\n${input.farmBlock.replace(/===.*?===\n?/g, "").trim()}`;
   }
 
   if (input.intent.isHealthRelated) {
     reply +=
-      "\n\nLưu ý: Thông tin chỉ mang tính tham khảo, không thay thế chẩn đoán và điều trị của bác sĩ thú y.";
+      "\n\nLưu ý: Thông tin chỉ tham khảo, không thay thế bác sĩ thú y. Gọi thú y sớm nếu dê yếu, sốt cao, không uống hoặc phân có máu.";
   }
 
-  return reply;
+  return reply.trim();
 }
 
 export async function generateAssistantReply(input: LlmCompletionInput): Promise<string> {
@@ -48,9 +94,12 @@ export async function generateAssistantReply(input: LlmCompletionInput): Promise
     return buildFallbackReply(input);
   }
 
-  const userContent = [input.knowledgeBlock, input.farmBlock, `=== USER_QUESTION ===\n${input.userQuestion}`].join(
-    "\n\n",
-  );
+  const userContent = [
+    input.knowledgeBlock,
+    input.farmBlock,
+    `=== USER_QUESTION ===\n${input.userQuestion}`,
+    "Hãy trả lời trực tiếp USER_QUESTION ở đoạn đầu; chỉ dùng KNOWLEDGE_CONTEXT và FARM_DATA; không lệch sang chủ đề không liên quan.",
+  ].join("\n\n");
 
   try {
     const res = await fetch(`${getAiApiBaseUrl()}/chat/completions`, {
@@ -61,7 +110,7 @@ export async function generateAssistantReply(input: LlmCompletionInput): Promise
       },
       body: JSON.stringify({
         model: getAiModel(),
-        temperature: 0.4,
+        temperature: 0.35,
         messages: [
           { role: "system", content: input.systemPrompt },
           { role: "user", content: userContent },

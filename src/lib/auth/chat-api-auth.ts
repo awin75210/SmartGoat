@@ -1,3 +1,4 @@
+import { DEFAULT_FARM_ID } from "@/lib/config/app.config";
 import { AppError } from "@/lib/errors/app-error";
 import { requireAuthenticatedFarmContext } from "@/lib/auth/server-context";
 import { createSupabaseServerClient } from "@/lib/supabase/server-client";
@@ -37,10 +38,9 @@ async function resolveSupabaseChatAuth(): Promise<ChatApiAuthContext | null> {
   }
 
   const role = (profile?.role as SessionUser["role"] | undefined) ?? "farm_owner";
-  const farmId = profile?.farm_id ?? null;
-
+  let farmId = profile?.farm_id ?? null;
   if (role === "farm_owner" && !farmId) {
-    throw new AppError("FORBIDDEN");
+    farmId = DEFAULT_FARM_ID;
   }
 
   if (role === "admin") {

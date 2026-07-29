@@ -28,12 +28,47 @@ const HERD_KEYWORDS = [
   "herd",
 ];
 
-const HEALTH_KEYWORDS = ["bệnh", "triệu chứng", "tiêu chảy", "sốt", "ho", "thú y", "viêm", "nhiễm"];
+const HEALTH_KEYWORDS = [
+  "bệnh",
+  "triệu chứng",
+  "tiêu chảy",
+  "phân lỏng",
+  "sốt",
+  "ho",
+  "thú y",
+  "viêm",
+  "nhiễm",
+  "bọn",
+  "nấm",
+  "ký sinh trùng",
+  "ky sinh trung",
+  "bị gì",
+  "là bệnh gì",
+  "benh gi",
+  "chán ăn",
+  "bỏ ăn",
+  "mũi chảy",
+  "thở nhanh",
+  "đau",
+];
+
+const NUTRITION_KEYWORDS = [
+  "dinh dưỡng",
+  "khẩu phần",
+  "thức ăn",
+  "cỏ",
+  "khoáng",
+  "sữa",
+  "ăn",
+  "uống",
+  "nutrition",
+];
 
 export type QueryIntent = {
   needsIot: boolean;
   needsHerd: boolean;
   isHealthRelated: boolean;
+  isNutritionRelated: boolean;
 };
 
 export function detectQueryIntent(question: string): QueryIntent {
@@ -41,5 +76,6 @@ export function detectQueryIntent(question: string): QueryIntent {
   const needsIot = IOT_KEYWORDS.some((kw) => lower.includes(kw));
   const needsHerd = HERD_KEYWORDS.some((kw) => lower.includes(kw));
   const isHealthRelated = HEALTH_KEYWORDS.some((kw) => lower.includes(kw));
-  return { needsIot, needsHerd, isHealthRelated };
+  const isNutritionRelated = NUTRITION_KEYWORDS.some((kw) => lower.includes(kw));
+  return { needsIot, needsHerd, isHealthRelated, isNutritionRelated };
 }

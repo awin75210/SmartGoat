@@ -1,9 +1,8 @@
 export type HandbookCategory =
+  | "farming_technique"
   | "nutrition"
-  | "health"
-  | "housing"
-  | "breeding"
-  | "biosecurity";
+  | "common_diseases"
+  | "kid_care_stages";
 
 export type HandbookArticleRow = {
   id: string;
@@ -27,9 +26,8 @@ export type HandbookArticle = {
 };
 
 export const HANDBOOK_CATEGORY_LABELS: Record<HandbookCategory, string> = {
-  nutrition: "Dinh dưỡng",
-  health: "Sức khỏe",
-  housing: "Chuồng trại",
-  breeding: "Sinh sản",
-  biosecurity: "An toàn sinh học",
+  farming_technique: "Kỹ thuật chăn nuôi dê",
+  nutrition: "Hướng dẫn dinh dưỡng",
+  common_diseases: "Tra cứu bệnh thường gặp",
+  kid_care_stages: "Chăm sóc dê con theo từng giai đoạn",
 };

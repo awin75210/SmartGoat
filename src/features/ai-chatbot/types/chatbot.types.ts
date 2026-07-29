@@ -3,6 +3,7 @@ export type KnowledgeStatus = "draft" | "published" | "hidden";
 export type KnowledgeArticleRow = {
   id: string;
   title: string;
+  summary: string;
   content: string;
   category: string;
   keywords: string;
@@ -24,6 +25,7 @@ export type KnowledgeFaqRow = {
 export type KnowledgeArticle = {
   id: string;
   title: string;
+  summary: string;
   content: string;
   category: string;
   keywords: string[];

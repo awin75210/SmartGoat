@@ -1,81 +1,100 @@
-import { SEED_REFERENCE_ISO } from "@/shared/utils/format";
-import type {
-  ChatSuggestedPrompt,
-  KnowledgeArticleRow,
-  KnowledgeFaqRow,
-} from "../types/chatbot.types";
-
-export const KNOWLEDGE_ARTICLES_SEED: KnowledgeArticleRow[] = [
-  {
-    id: "ka-001",
-    title: "Khẩu phần cho dê thịt",
-    content:
-      "Dê thịt cần khoảng 2–3% trọng lượng cơ thể thức ăn thô mỗi ngày. Bổ sung khẩu phần tinh 0.3–0.5% khi tăng trưởng nhanh. Luôn có nước sạch và khoáng liên tục.",
-    category: "nutrition",
-    keywords: "dinh dưỡng,thức ăn,khẩu phần",
-    status: "published",
-    created_at: SEED_REFERENCE_ISO,
-    updated_at: SEED_REFERENCE_ISO,
-  },
-  {
-    id: "ka-002",
-    title: "Nhiệt độ và thông gió chuồng nuôi",
-    content:
-      "Nhiệt độ lý tưởng cho dê thịt là 18–26°C. Nếu vượt 28°C, tăng thông gió và cung cấp nước mát. Theo dõi biểu đồ IoT để phát hiện xu hướng tăng. Độ ẩm nên duy trì 55–70%, NH₃ dưới 10 ppm.",
-    category: "housing",
-    keywords: "nhiệt độ,chuồng,thông gió,IoT,độ ẩm,cảm biến",
-    status: "published",
-    created_at: SEED_REFERENCE_ISO,
-    updated_at: SEED_REFERENCE_ISO,
-  },
-  {
-    id: "ka-003",
-    title: "Xử lý ban đầu khi dê con tiêu chảy",
-    content:
-      "Cách ly khỏi đàn, bù dịch bằng dung dịch điện giải uống tự do, vệ sinh chuồng và đồ uống. Nếu dê yếu, không uống hoặc phân có máu — liên hệ thú y ngay. Theo dõi nhiệt độ và phân 4–6 giờ/lần.",
-    category: "health",
-    keywords: "tiêu chảy,dê con,bệnh,sức khỏe",
-    status: "published",
-    created_at: SEED_REFERENCE_ISO,
-    updated_at: SEED_REFERENCE_ISO,
-  },
-];
-
-export const KNOWLEDGE_FAQS_SEED: KnowledgeFaqRow[] = [
-  {
-    id: "kf-001",
-    question: "Nguyên nhân tiêu chảy ở dê con là gì?",
-    answer:
-      "Thường do nhiễm khuẩn, ký sinh trùng, thay đổi thức ăn đột ngột hoặc vệ sinh kém. Kiểm tra nguồn nước và khẩu phần trong 24 giờ qua.",
-    keywords: "tiêu chảy,nguyên nhân,dê con",
-    priority: 10,
-    status: "published",
-    created_at: SEED_REFERENCE_ISO,
-  },
-  {
-    id: "kf-002",
-    question: "Lịch tiêm phòng dê tham khảo?",
-    answer:
-      "Tả dê (Clostridium) 2–3 tháng/lần, PPR theo khuyến cáo địa phương, tẩy giun định kỳ 3 tháng. Ghi nhận trên hồ sơ từng con.",
-    keywords: "tiêm phòng,lịch,vaccine",
-    priority: 8,
-    status: "published",
-    created_at: SEED_REFERENCE_ISO,
-  },
-  {
-    id: "kf-003",
-    question: "Cách phòng bệnh tiêu chảy cho dê?",
-    answer:
-      "Giữ chuồng khô ráo, sữa/con uống ấm, tránh đổi khẩu phần đột ngột, tiêm phòng đúng lịch và tách dê yếu ra chuồng riêng.",
-    keywords: "tiêu chảy,phòng,bệnh",
-    priority: 9,
-    status: "published",
-    created_at: SEED_REFERENCE_ISO,
-  },
-];
-
-export const CHAT_SUGGESTED_PROMPTS_SEED: ChatSuggestedPrompt[] = [
-  { id: "sp-1", label: "Nguyên nhân tiêu chảy", prompt: "Nguyên nhân tiêu chảy ở dê con là gì?" },
-  { id: "sp-2", label: "Phòng bệnh tiêu chảy", prompt: "Cách phòng bệnh tiêu chảy cho dê?" },
-  { id: "sp-3", label: "Môi trường chuồng", prompt: "Nhiệt độ và độ ẩm chuồng hiện tại có ổn không?" },
-];
+import { HANDBOOK_ARTICLES_SEED } from "@/features/handbook/data/handbook.seed";
+import { SEED_REFERENCE_ISO } from "@/shared/utils/format";
+import type {
+  ChatSuggestedPrompt,
+  KnowledgeArticleRow,
+  KnowledgeFaqRow,
+} from "../types/chatbot.types";
+
+/** Single source: handbook seed rows → knowledge articles (sổ tay + AI chat). */
+function handbookRowsToKnowledge(): KnowledgeArticleRow[] {
+  return HANDBOOK_ARTICLES_SEED.map((hb) => ({
+    id: hb.id.replace(/^hb-/, "ka-"),
+    title: hb.title,
+    summary: hb.summary,
+    content: hb.body,
+    category: hb.category,
+    keywords: hb.tags,
+    status: "published" as const,
+    created_at: hb.updated_at,
+    updated_at: hb.updated_at,
+  }));
+}
+
+export const KNOWLEDGE_ARTICLES_SEED: KnowledgeArticleRow[] = handbookRowsToKnowledge();
+
+export const KNOWLEDGE_FAQS_SEED: KnowledgeFaqRow[] = [
+  {
+    id: "kf-001",
+    question: "Nguyên nhân tiêu chảy ở dê con là gì?",
+    answer:
+      "Thường do nhiễm khuẩn, ký sinh trùng, thay đổi thức ăn đột ngột hoặc vệ sinh kém. Kiểm tra nguồn nước và khẩu phần trong 24 giờ qua. Cách ly dê yếu và liên hệ thú y nếu phân có máu hoặc dê không uống.",
+    keywords: "tiêu chảy,nguyên nhân,dê con,bệnh",
+    priority: 10,
+    status: "published",
+    created_at: SEED_REFERENCE_ISO,
+  },
+  {
+    id: "kf-002",
+    question: "Dê ho sốt thở nhanh có thể bị gì?",
+    answer:
+      "Có thể nghi ngờ viêm phổi hoặc nhiễm trùng đường hô hấp. Cách ly, thông gió chuồng, đo thân nhiệt và gọi thú y để chẩn đoán. Không tự ý dùng kháng sinh nếu chưa có chỉ định.",
+    keywords: "ho,sốt,viêm phổi,bệnh,dê",
+    priority: 11,
+    status: "published",
+    created_at: SEED_REFERENCE_ISO,
+  },
+  {
+    id: "kf-003",
+    question: "Cách phòng bệnh tiêu chảy cho dê?",
+    answer:
+      "Giữ chuồng khô ráo, sữa/con uống ấm, tránh đổi khẩu phần đột ngột, tiêm phòng đúng lịch và tách dê yếu ra chuồng riêng.",
+    keywords: "tiêu chảy,phòng,bệnh",
+    priority: 9,
+    status: "published",
+    created_at: SEED_REFERENCE_ISO,
+  },
+  {
+    id: "kf-004",
+    question: "Chăm dê con 1 tháng tuổi cần lưu ý gì?",
+    answer:
+      "Đảm bảo sữa/khẩu phần đủ, nước sạch, ổ ấm khô. Bắt đầu cỏ mềm và thức ăn tinh pha loãng. Cân nặng hàng tuần; tiêu chảy hoặc bỏ ăn — cách ly và gọi thú y sớm.",
+    keywords: "dê con,1 tháng,chăm sóc,giai đoạn",
+    priority: 10,
+    status: "published",
+    created_at: SEED_REFERENCE_ISO,
+  },
+  {
+    id: "kf-005",
+    question: "Khẩu phần dinh dưỡng cơ bản cho dê thịt?",
+    answer:
+      "2–3% trọng lượng thức ăn thô/ngày, bổ sung tinh khi tăng trưởng, khoáng và nước liên tục. Điều chỉnh theo mùa và tình trạng thể trạng.",
+    keywords: "dinh dưỡng,khẩu phần,dê thịt",
+    priority: 7,
+    status: "published",
+    created_at: SEED_REFERENCE_ISO,
+  },
+];
+
+export const CHAT_SUGGESTED_PROMPTS_SEED: ChatSuggestedPrompt[] = [
+  {
+    id: "sp-1",
+    label: "Khẩu phần dê thịt",
+    prompt: "Khẩu phần dinh dưỡng cơ bản cho dê thịt là gì?",
+  },
+  {
+    id: "sp-2",
+    label: "Dê ho sốt",
+    prompt: "Dê con ho sốt thở nhanh có thể bị bệnh gì và xử lý ban đầu thế nào?",
+  },
+  {
+    id: "sp-3",
+    label: "Dê con 1 tháng",
+    prompt: "Chăm dê con 1 tháng tuổi cần lưu ý gì?",
+  },
+  {
+    id: "sp-4",
+    label: "Tiêu chảy dê con",
+    prompt: "Nguyên nhân tiêu chảy ở dê con là gì và cần làm gì trước khi gọi thú y?",
+  },
+];

@@ -1,3 +1,4 @@
+import { normalizeKnowledgeCategory } from "../constants/knowledge-categories";
 import type {
   ChatConversation,
   ChatMessage,
@@ -12,8 +13,9 @@ export function mapKnowledgeArticleRow(row: KnowledgeArticleRow): KnowledgeArtic
   return {
     id: row.id,
     title: row.title,
+    summary: row.summary ?? "",
     content: row.content,
-    category: row.category,
+    category: normalizeKnowledgeCategory(row.category),
     keywords: row.keywords
       .split(",")
       .map((k) => k.trim())

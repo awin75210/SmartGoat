@@ -35,7 +35,10 @@ export function HandbookPage({ articles }: HandbookPageProps) {
 
   return (
     <Stack gap="lg" className={styles.page}>
-      <PageHeader title="Sổ tay chăn nuôi" description="Kiến thức thực hành cho trại dê" />
+      <PageHeader
+        title="Sổ tay chăn nuôi"
+        description="Kỹ thuật chăn nuôi, dinh dưỡng, tra cứu bệnh thường gặp và chăm dê con theo từng giai đoạn — lọc theo danh mục bên dưới."
+      />
       <Group grow preventGrowOverflow={false}>
         <TextInput
           placeholder="Tìm bài viết..."

@@ -9,41 +9,10 @@ import {
 import type { KnowledgeArticleInput, KnowledgeFaqInput } from "../schemas/chatbot.schema";
 import type { KnowledgeArticle, KnowledgeFaq, KnowledgeStatus } from "../types/chatbot.types";
 import type { KnowledgeRepository } from "./knowledge.repository";
+import { normalizeKnowledgeKey } from "../utils/normalize-knowledge-key";
 
-function tokenize(text: string): string[] {
-  return text
-    .toLowerCase()
-    .split(/[\s,.;:!?()\-–—/]+/)
-    .filter((t) => t.length > 1);
-}
-
-function scoreText(queryTokens: string[], haystack: string): number {
-  const lower = haystack.toLowerCase();
-  let score = 0;
-  for (const token of queryTokens) {
-    if (lower.includes(token)) {
-      score += 2;
-    }
-  }
-  return score;
-}
-
-function scoreArticle(queryTokens: string[], article: KnowledgeArticle): number {
-  return (
-    scoreText(queryTokens, article.title) * 3 +
-    scoreText(queryTokens, article.content) +
-    scoreText(queryTokens, article.keywords.join(" "))
-  );
-}
-
-function scoreFaq(queryTokens: string[], faq: KnowledgeFaq): number {
-  return (
-    scoreText(queryTokens, faq.question) * 3 +
-    scoreText(queryTokens, faq.answer) +
-    scoreText(queryTokens, faq.keywords.join(" ")) +
-    faq.priority * 0.1
-  );
-}
+import { rankPublishedKnowledge } from "../utils/knowledge-retrieval.utils";
+import type { QueryIntent } from "../services/query-intent.service";
 
 let articlesStore = KNOWLEDGE_ARTICLES_SEED.map((row) => mapKnowledgeArticleRow(row));
 let faqsStore = KNOWLEDGE_FAQS_SEED.map((row) => mapKnowledgeFaqRow(row));
@@ -71,31 +40,17 @@ export class SeedKnowledgeRepository implements KnowledgeRepository {
   async searchPublished(
     query: string,
     limit: number,
+    intent: QueryIntent = {
+      needsIot: false,
+      needsHerd: false,
+      isHealthRelated: false,
+      isNutritionRelated: false,
+    },
   ): Promise<{ articles: KnowledgeArticle[]; faqs: KnowledgeFaq[] }> {
-    const queryTokens = tokenize(query);
     const publishedArticles = await this.listPublishedArticles();
     const publishedFaqs = await this.listPublishedFaqs();
 
-    const rankedArticles = publishedArticles
-      .map((a) => ({ item: a, score: scoreArticle(queryTokens, a) }))
-      .filter((r) => r.score > 0)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, limit)
-      .map((r) => r.item);
-
-    const remaining = Math.max(0, limit - rankedArticles.length);
-    const rankedFaqs = publishedFaqs
-      .map((f) => ({ item: f, score: scoreFaq(queryTokens, f) }))
-      .filter((r) => r.score > 0)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, remaining > 0 ? remaining : limit)
-      .map((r) => r.item);
-
-    const combinedLimit = limit;
-    const articles = rankedArticles.slice(0, combinedLimit);
-    const faqs = rankedFaqs.slice(0, Math.max(0, combinedLimit - articles.length));
-
-    return { articles, faqs };
+    return rankPublishedKnowledge(publishedArticles, publishedFaqs, query, intent, limit);
   }
 
   async listAllArticlesAdmin(): Promise<KnowledgeArticle[]> {
@@ -104,6 +59,16 @@ export class SeedKnowledgeRepository implements KnowledgeRepository {
 
   async listAllFaqsAdmin(): Promise<KnowledgeFaq[]> {
     return [...faqsStore];
+  }
+
+  async findArticleByTitle(title: string): Promise<KnowledgeArticle | null> {
+    const key = normalizeKnowledgeKey(title);
+    return articlesStore.find((a) => normalizeKnowledgeKey(a.title) === key) ?? null;
+  }
+
+  async findFaqByQuestion(question: string): Promise<KnowledgeFaq | null> {
+    const key = normalizeKnowledgeKey(question);
+    return faqsStore.find((f) => normalizeKnowledgeKey(f.question) === key) ?? null;
   }
 
   async upsertArticle(id: string | null, input: KnowledgeArticleInput): Promise<KnowledgeArticle> {
@@ -115,6 +80,7 @@ export class SeedKnowledgeRepository implements KnowledgeRepository {
       const updated: KnowledgeArticle = {
         ...articlesStore[idx],
         title: input.title,
+        summary: input.summary?.trim() ?? "",
         content: input.content,
         category: input.category,
         keywords: keywords.split(",").map((k) => k.trim()).filter(Boolean),
@@ -128,6 +94,7 @@ export class SeedKnowledgeRepository implements KnowledgeRepository {
     const created: KnowledgeArticle = {
       id: newId,
       title: input.title,
+      summary: input.summary?.trim() ?? "",
       content: input.content,
       category: input.category,
       keywords: keywords.split(",").map((k) => k.trim()).filter(Boolean),

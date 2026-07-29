@@ -1,10 +1,30 @@
 .page {
   width: 100%;
-  min-height: 0;
-  flex: 1;
   display: flex;
   flex-direction: column;
   gap: var(--mantine-spacing-md);
+  min-height: 0;
+  /* Khung chat cố định theo viewport, tránh kéo cả trang */
+  height: calc(100dvh - 60px - 2.75rem);
+  max-height: calc(100dvh - 60px - 2.75rem);
+}
+
+@media (min-width: 768px) {
+  .page {
+    height: calc(100dvh - 60px - 3.25rem);
+    max-height: calc(100dvh - 60px - 3.25rem);
+  }
+}
+
+.pageTop {
+  flex-shrink: 0;
+}
+
+.chatShell {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .layout {
@@ -13,13 +33,13 @@
   gap: var(--mantine-spacing-md);
   flex: 1;
   min-height: 0;
+  overflow: hidden;
 }
 
 @media (min-width: 768px) {
   .layout {
     flex-direction: row;
     align-items: stretch;
-    min-height: 520px;
   }
 }
 
@@ -30,13 +50,16 @@
   border-radius: var(--mantine-radius-md);
   display: flex;
   flex-direction: column;
-  max-height: 200px;
+  min-height: 0;
+  overflow: hidden;
+  height: 11rem;
 }
 
 @media (min-width: 768px) {
   .sidebar {
     width: 260px;
-    max-height: none;
+    height: 100%;
+    max-height: 100%;
   }
 }
 
@@ -45,12 +68,26 @@
   min-height: 0;
 }
 
+.sidebarScroll :global([data-scroll-area-viewport]) {
+  max-height: 100%;
+}
+
+.messagesScroll {
+  flex: 1;
+  min-height: 0;
+}
+
+.messagesScroll :global([data-scroll-area-viewport]) {
+  max-height: 100%;
+}
+
 .main {
   flex: 1;
   min-width: 0;
   min-height: 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .prompts {
@@ -63,24 +100,21 @@
   display: flex;
   flex-direction: column;
   flex: 1;
-  min-height: 320px;
+  min-height: 0;
   border: 1px solid rgba(26, 58, 92, 0.08);
   border-radius: var(--mantine-radius-md);
 }
 
-.scroll {
-  flex: 1;
-  min-height: 200px;
-}
-
-@media (min-width: 768px) {
-  .chatBox {
-    min-height: 480px;
-  }
+.messageList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-sm);
 }
 
 .inputRow {
+  flex-shrink: 0;
   border-top: 1px solid rgba(26, 58, 92, 0.08);
+  background: #fff;
 }
 
 .userBubble {
@@ -105,11 +139,13 @@
 }
 
 .disclaimer {
+  flex-shrink: 0;
   text-align: center;
-  padding-bottom: 0.5rem;
+  padding-bottom: 0.25rem;
 }
 
 .errorBanner {
+  flex-shrink: 0;
   border-radius: var(--mantine-radius-md);
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
+import { useLogout } from "@/features/auth/hooks/use-logout";
 import { AdminShell } from "./AdminShell";
-import { logoutAction } from "@/features/auth/actions/login.actions";
 
 type AdminAppLayoutProps = {
   children: React.ReactNode;
@@ -9,9 +9,7 @@ type AdminAppLayoutProps = {
 };
 
 export function AdminAppLayout({ children, userName }: AdminAppLayoutProps) {
-  const handleLogout = () => {
-    void logoutAction();
-  };
+  const { logout: handleLogout } = useLogout();
 
   return (
     <AdminShell userName={userName} onLogout={handleLogout}>

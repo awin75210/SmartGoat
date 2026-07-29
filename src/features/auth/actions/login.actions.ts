@@ -1,6 +1,5 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { getDefaultRedirectForRole } from "@/lib/auth/access-control";
 import {
   clearAppSessionCookies,
@@ -35,8 +34,10 @@ export async function loginAction(
   });
 }
 
-export async function logoutAction(): Promise<void> {
-  await signOutSupabase();
-  await clearAppSessionCookies();
-  redirect("/app");
+export async function logoutAction(): Promise<ActionResult<{ redirectTo: string }>> {
+  return toActionResult(async () => {
+    await signOutSupabase();
+    await clearAppSessionCookies();
+    return { redirectTo: "/app" };
+  });
 }

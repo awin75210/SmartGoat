@@ -50,7 +50,7 @@ export async function POST(request: Request) {
         { status },
       );
     }
-    console.error("[ai-chat] unexpected error");
+    console.error("[ai-chat] unexpected error", error instanceof Error ? error.message : error);
     return NextResponse.json(
       { ok: false, code: "INTERNAL_ERROR", message: getErrorMessageVi("INTERNAL_ERROR") },
       { status: 500 },

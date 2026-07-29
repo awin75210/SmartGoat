@@ -59,8 +59,8 @@ export class ChatbotService {
     return this.chatRepo.createConversation(userId, farmId, "Cuộc trò chuyện mới");
   }
 
-  private async retrieveKnowledge(query: string): Promise<RetrievedKnowledge> {
-    const { articles, faqs } = await this.knowledgeRepo.searchPublished(query, RETRIEVAL_LIMIT);
+  private async retrieveKnowledge(query: string, intent: ReturnType<typeof detectQueryIntent>): Promise<RetrievedKnowledge> {
+    const { articles, faqs } = await this.knowledgeRepo.searchPublished(query, RETRIEVAL_LIMIT, intent);
     const sources = buildSources(articles, faqs);
     return { articles, faqs, sources };
   }
@@ -87,11 +87,16 @@ export class ChatbotService {
     await this.chatRepo.appendMessage(userId, farmId, conversationId, "user", message);
 
     const intent = detectQueryIntent(message);
-    const retrieved = await this.retrieveKnowledge(message);
+    const retrieved = await this.retrieveKnowledge(message, intent);
     const farmSnippet = await buildFarmContextSnippet(farmId, intent);
 
     const knowledgeBlock = buildKnowledgeContextBlock(
-      retrieved.articles.map((a) => ({ title: a.title, content: a.content, category: a.category })),
+      retrieved.articles.map((a) => ({
+        title: a.title,
+        summary: a.summary,
+        content: a.content,
+        category: a.category,
+      })),
       retrieved.faqs.map((f) => ({ question: f.question, answer: f.answer })),
     );
     const farmBlock = buildFarmDataBlock(farmSnippet);

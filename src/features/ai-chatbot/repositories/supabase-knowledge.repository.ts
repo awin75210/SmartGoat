@@ -6,22 +6,10 @@ import {
 import type { KnowledgeArticleInput, KnowledgeFaqInput } from "../schemas/chatbot.schema";
 import type { KnowledgeArticle, KnowledgeFaq, KnowledgeStatus } from "../types/chatbot.types";
 import type { KnowledgeRepository } from "./knowledge.repository";
+import { normalizeKnowledgeKey } from "../utils/normalize-knowledge-key";
 
-function tokenize(text: string): string[] {
-  return text
-    .toLowerCase()
-    .split(/[\s,.;:!?()\-–—/]+/)
-    .filter((t) => t.length > 1);
-}
-
-function scoreText(queryTokens: string[], haystack: string): number {
-  const lower = haystack.toLowerCase();
-  let score = 0;
-  for (const token of queryTokens) {
-    if (lower.includes(token)) score += 2;
-  }
-  return score;
-}
+import { rankPublishedKnowledge } from "../utils/knowledge-retrieval.utils";
+import type { QueryIntent } from "../services/query-intent.service";
 
 export class SupabaseKnowledgeRepository implements KnowledgeRepository {
   private async client() {
@@ -51,45 +39,18 @@ export class SupabaseKnowledgeRepository implements KnowledgeRepository {
   async searchPublished(
     query: string,
     limit: number,
+    intent: QueryIntent = {
+      needsIot: false,
+      needsHerd: false,
+      isHealthRelated: false,
+      isNutritionRelated: false,
+    },
   ): Promise<{ articles: KnowledgeArticle[]; faqs: KnowledgeFaq[] }> {
     const [articles, faqs] = await Promise.all([
       this.listPublishedArticles(),
       this.listPublishedFaqs(),
     ]);
-    const queryTokens = tokenize(query);
-
-    const rankedArticles = articles
-      .map((a) => ({
-        item: a,
-        score:
-          scoreText(queryTokens, a.title) * 3 +
-          scoreText(queryTokens, a.content) +
-          scoreText(queryTokens, a.keywords.join(" ")),
-      }))
-      .filter((r) => r.score > 0)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, limit)
-      .map((r) => r.item);
-
-    const remaining = Math.max(0, limit - rankedArticles.length);
-    const rankedFaqs = faqs
-      .map((f) => ({
-        item: f,
-        score:
-          scoreText(queryTokens, f.question) * 3 +
-          scoreText(queryTokens, f.answer) +
-          scoreText(queryTokens, f.keywords.join(" ")) +
-          f.priority * 0.1,
-      }))
-      .filter((r) => r.score > 0)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, remaining > 0 ? remaining : limit)
-      .map((r) => r.item);
-
-    return {
-      articles: rankedArticles,
-      faqs: rankedFaqs.slice(0, Math.max(0, limit - rankedArticles.length)),
-    };
+    return rankPublishedKnowledge(articles, faqs, query, intent, limit);
   }
 
   async listAllArticlesAdmin(): Promise<KnowledgeArticle[]> {
@@ -111,10 +72,23 @@ export class SupabaseKnowledgeRepository implements KnowledgeRepository {
     return (data ?? []).map((row) => mapKnowledgeFaqRow(row));
   }
 
+  async findArticleByTitle(title: string): Promise<KnowledgeArticle | null> {
+    const articles = await this.listAllArticlesAdmin();
+    const key = normalizeKnowledgeKey(title);
+    return articles.find((a) => normalizeKnowledgeKey(a.title) === key) ?? null;
+  }
+
+  async findFaqByQuestion(question: string): Promise<KnowledgeFaq | null> {
+    const faqs = await this.listAllFaqsAdmin();
+    const key = normalizeKnowledgeKey(question);
+    return faqs.find((f) => normalizeKnowledgeKey(f.question) === key) ?? null;
+  }
+
   async upsertArticle(id: string | null, input: KnowledgeArticleInput): Promise<KnowledgeArticle> {
     const supabase = await this.client();
     const payload = {
       title: input.title,
+      summary: input.summary?.trim() ?? "",
       content: input.content,
       category: input.category,
       keywords: input.keywords?.trim() ?? "",

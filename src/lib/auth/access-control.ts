@@ -9,6 +9,10 @@ export function canAccessPath(role: UserRole | null, pathname: string): boolean 
   if (pathname === "/") {
     return true;
   }
+  /** API routes enforce auth themselves; avoid HTML redirects that break `fetch().json()`. */
+  if (pathname.startsWith("/api/")) {
+    return true;
+  }
   if (pathname.startsWith("/admin")) {
     return role === "admin";
   }
