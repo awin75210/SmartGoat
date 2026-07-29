@@ -1,29 +1,51 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { SESSION_COOKIE_NAME } from "@/lib/config/app.config";
+import {
+  SESSION_COOKIE_NAME,
+  SESSION_ROLE_COOKIE_NAME,
+} from "@/lib/config/app.config";
 import {
   canAccessPath,
   getDefaultRedirectForRole,
 } from "@/lib/auth/access-control";
+import { refreshSupabaseSession } from "@/lib/supabase/proxy-client";
+import { isSupabaseConfigured } from "@/lib/supabase/env";
 import type { UserRole } from "@/shared/types/roles";
 
-/** Map session cookie user id to role for route guard (middleware-safe, no DB). */
+/** Map session cookie user id to role for route guard (seed demo accounts). */
 const SESSION_ROLE_MAP: Record<string, UserRole> = {
   "user-owner-001": "farm_owner",
   "user-admin-001": "admin",
 };
 
-function getRoleFromSessionCookie(sessionValue: string | undefined): UserRole | null {
+function parseRoleCookie(value: string | undefined): UserRole | null {
+  if (value === "admin" || value === "farm_owner") {
+    return value;
+  }
+  return null;
+}
+
+function getRoleFromRequest(request: NextRequest): UserRole | null {
+  const roleFromCookie = parseRoleCookie(request.cookies.get(SESSION_ROLE_COOKIE_NAME)?.value);
+  if (roleFromCookie) {
+    return roleFromCookie;
+  }
+  const sessionValue = request.cookies.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionValue) {
     return null;
   }
   return SESSION_ROLE_MAP[sessionValue] ?? null;
 }
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
+  let response = NextResponse.next({ request });
+
+  if (isSupabaseConfigured()) {
+    response = await refreshSupabaseSession(request, response);
+  }
+
   const { pathname } = request.nextUrl;
-  const sessionValue = request.cookies.get(SESSION_COOKIE_NAME)?.value;
-  const role = getRoleFromSessionCookie(sessionValue);
+  const role = getRoleFromRequest(request);
 
   if (pathname === "/") {
     if (role === "admin") {
@@ -45,7 +67,7 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL(getDefaultRedirectForRole(role), request.url));
   }
 
-  return NextResponse.next();
+  return response;
 }
 
 export const config = {

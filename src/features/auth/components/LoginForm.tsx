@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import {
   Anchor,
   Button,
@@ -17,25 +17,30 @@ import { loginAction } from "../actions/login.actions";
 import styles from "./LoginForm.module.css";
 
 export function LoginForm() {
-  const [email, setEmail] = useState("owner@capracare.vn");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(true);
-  const [pending, startTransition] = useTransition();
+  const [pending, setPending] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    startTransition(async () => {
-      const result = await loginAction({ email, password, rememberMe });
-      if (result.ok) {
-        window.location.href = result.data.redirectTo;
-        return;
+    void (async () => {
+      setPending(true);
+      try {
+        const result = await loginAction({ email, password, rememberMe });
+        if (result.ok) {
+          window.location.href = result.data.redirectTo;
+          return;
+        }
+        notifications.show({
+          color: "red",
+          title: "Đăng nhập thất bại",
+          message: result.message,
+        });
+      } finally {
+        setPending(false);
       }
-      notifications.show({
-        color: "red",
-        title: "Đăng nhập thất bại",
-        message: result.message,
-      });
-    });
+    })();
   };
 
   return (
@@ -45,7 +50,8 @@ export function LoginForm() {
           Đăng nhập
         </Title>
         <Text size="sm" c="dimmed">
-          Tài khoản demo: owner@capracare.vn / 123456
+          Dùng email và mật khẩu tài khoản Supabase Auth (cần bản ghi trong bảng profiles). Demo
+          local (tắt Supabase trong .env): owner@capracare.vn / 123456
         </Text>
         <form onSubmit={handleSubmit}>
           <Stack gap="md">

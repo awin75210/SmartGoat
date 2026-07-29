@@ -1,8 +1,68 @@
+.brand {
+  flex-shrink: 0;
+  width: 100%;
+  padding: 0 0.9rem;
+  min-height: 60px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+}
+
+.brandAdmin {
+  border-bottom-color: rgba(26, 58, 92, 0.08);
+}
+
+.brandRow {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.logoSvg {
+  flex-shrink: 0;
+}
+
+.brandText {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.brandTitle {
+  color: #1a3a5c;
+  font-size: 1.05rem;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
+}
+
+.brandTitleLight {
+  color: #fff;
+  font-size: 1.05rem;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
+}
+
+.tagline {
+  line-height: 1.35;
+  opacity: 0.85;
+}
+
+.taglineLight {
+  color: rgba(255, 255, 255, 0.68);
+  line-height: 1.35;
+  font-size: 0.6875rem;
+}
+
 .root {
-  padding: 1.1rem 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
   background: linear-gradient(180deg, #f4f9fd 0%, #eef6fc 100%);
   border-right: 1px solid rgba(26, 58, 92, 0.08);
-  height: 100%;
 }
 
 .rootFarm {
@@ -10,45 +70,46 @@
   border-right: none;
 }
 
-.brand {
-  padding: 0 0.15rem 0.85rem;
-}
-
-.brandRow {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-}
-
-.logoSvg {
-  flex-shrink: 0;
-}
-
-.brandTitle {
-  color: #1a3a5c;
-  font-size: 1.125rem;
-  line-height: 1.2;
-}
-
-.brandTitleLight {
-  color: #fff;
-  font-size: 1.125rem;
-  line-height: 1.2;
-}
-
-.taglineLight {
-  color: rgba(255, 255, 255, 0.72);
-  line-height: 1.35;
-  margin-top: 2px;
+.navScrollWrap {
+  flex: 1;
+  min-height: 0;
+  height: 100%;
 }
 
 .navScroll {
-  margin-inline: -0.15rem;
+  height: 100%;
+}
+
+.navInner {
+  padding: 0.75rem 0.65rem 0.75rem;
+}
+
+.navSection,
+.navSectionFarm {
+  display: block;
+  margin-bottom: 0.5rem;
+  padding-inline: 0.45rem;
+  letter-spacing: 0.08em;
+}
+
+.navSection {
+  color: #5c7a99;
+}
+
+.navSectionFarm {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.navList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .navLink {
-  border-radius: 12px;
+  border-radius: 10px;
   font-weight: 500;
+  font-size: 0.9375rem;
 }
 
 .navLink[data-active] {
@@ -57,21 +118,22 @@
 }
 
 .navLinkFarm {
-  border-radius: 12px;
-  color: rgba(255, 255, 255, 0.92);
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.9);
   font-weight: 500;
   font-size: 0.9375rem;
-  padding-block: 0.55rem;
+  padding-block: 0.5rem;
+  transition: background-color 0.15s ease;
 }
 
 .navLinkFarm:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .navLinkFarm[data-active] {
-  background: linear-gradient(90deg, #43cd78 0%, #3bc46f 100%);
+  background: linear-gradient(90deg, #43cd78 0%, #38c068 100%);
   color: #fff;
-  box-shadow: 0 4px 14px rgba(67, 205, 120, 0.35);
+  box-shadow: 0 3px 12px rgba(67, 205, 120, 0.28);
 }
 
 .navLinkFarm[data-active] svg,
@@ -79,9 +141,17 @@
   color: inherit;
 }
 
+.footer {
+  flex-shrink: 0;
+  padding: 0.5rem 0.65rem 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.footerAdmin {
+  border-top-color: rgba(26, 58, 92, 0.06);
+}
+
 .sidebarFooter {
-  margin-top: auto;
-  padding: 0.75rem 0.5rem 0.25rem;
-  min-height: 72px;
+  min-height: 48px;
   pointer-events: none;
 }

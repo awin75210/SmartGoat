@@ -18,7 +18,9 @@ export function toActionResult<T>(fn: () => Promise<T>): Promise<ActionResult<T>
     .then((data) => actionSuccess(data))
     .catch((error: unknown) => {
       if (error instanceof AppError) {
-        return actionFailure(error.code, getErrorMessageVi(error.code));
+        const custom =
+          error.message && error.message !== error.code ? error.message : undefined;
+        return actionFailure(error.code, custom ?? getErrorMessageVi(error.code));
       }
       return actionFailure("INTERNAL_ERROR");
     });

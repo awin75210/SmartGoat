@@ -33,4 +33,5 @@ export const ADMIN_NAV_ITEMS: AppNavItem[] = [
   { label: "Trang trại", href: "/admin/farms", icon: IconBuilding },
   { label: "Người dùng", href: "/admin/users", icon: IconUserCog },
   { label: "Thiết bị", href: "/admin/devices", icon: IconDeviceAnalytics },
+  { label: "Kiến thức AI", href: "/admin/knowledge", icon: IconMessageChatbot },
 ];

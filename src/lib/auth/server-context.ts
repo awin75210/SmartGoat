@@ -1,6 +1,8 @@
 import { cookies } from "next/headers";
 import { DEFAULT_FARM_ID, SESSION_COOKIE_NAME } from "@/lib/config/app.config";
 import { AppError } from "@/lib/errors/app-error";
+import { getSessionUserFromSupabase } from "@/lib/auth/supabase-auth";
+import { isSupabaseConfigured } from "@/lib/supabase/env";
 import type { SessionUser } from "@/shared/types/roles";
 import { authService } from "@/features/auth/services/auth.service";
 
@@ -20,6 +22,13 @@ export type FarmContext = {
 };
 
 export async function getSessionUser(): Promise<SessionUser | null> {
+  if (isSupabaseConfigured()) {
+    const supabaseSession = await getSessionUserFromSupabase();
+    if (supabaseSession) {
+      return supabaseSession;
+    }
+  }
+
   const cookieStore = await cookies();
   const sessionId = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionId) {

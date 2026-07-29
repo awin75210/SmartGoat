@@ -15,22 +15,52 @@
 .navbar {
   background: linear-gradient(180deg, #1e4a72 0%, #153556 52%, #122d47 100%);
   border-right: none;
+  overflow: hidden;
 }
 
+.navbarBrandSection {
+  flex-shrink: 0;
+  background: linear-gradient(180deg, #1e4a72 0%, #1a4268 100%);
+}
+
+.navbarFooterSection {
+  flex-shrink: 0;
+}
+
+.navbarMenuSection {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.navbar :global([data-grow]) {
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Giữ offset header/navbar do Mantine inject — không set padding shorthand ở đây */
 .main {
-  min-height: calc(100dvh - 60px);
-  padding: 1.25rem 1.35rem 1.75rem;
-  background: #eef3f8;
+  min-height: 100dvh;
   min-width: 0;
+  background: #eef3f8;
+}
+
+.mainInner {
+  padding: 1.25rem 1.35rem 1.75rem;
+  max-width: 1440px;
+  margin-inline: auto;
 }
 
 @media (min-width: 768px) {
-  .main {
+  .mainInner {
     padding: 1.35rem 1.75rem 2rem;
   }
 }
 
-/* Mobile: dim content when drawer menu is open (navbar slides over main) */
 .mobileBackdrop {
   display: block;
   position: fixed;

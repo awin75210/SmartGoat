@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { Button, Group, Select, Stack, Tabs, Text } from "@mantine/core";
 import {
   ALERT_LEVEL_COLORS,
@@ -21,7 +21,7 @@ type AlertsPageProps = {
 export function AlertsPage({ initialAlerts }: AlertsPageProps) {
   const [alerts, setAlerts] = useState(initialAlerts);
   const [filter, setFilter] = useState<AlertListFilter>({ tab: "active", level: "all" });
-  const [pending, startTransition] = useTransition();
+  const [pending, setPending] = useState(false);
 
   const filtered = alerts.filter((a) => {
     if (filter.tab === "active" && a.isResolved) return false;
@@ -31,12 +31,17 @@ export function AlertsPage({ initialAlerts }: AlertsPageProps) {
   });
 
   const handleResolve = (alertId: string) => {
-    startTransition(async () => {
-      const result = await markAlertResolvedAction({ alertId });
-      if (result.ok) {
-        setAlerts((prev) => prev.map((a) => (a.id === alertId ? result.data : a)));
+    void (async () => {
+      setPending(true);
+      try {
+        const result = await markAlertResolvedAction({ alertId });
+        if (result.ok) {
+          setAlerts((prev) => prev.map((a) => (a.id === alertId ? result.data : a)));
+        }
+      } finally {
+        setPending(false);
       }
-    });
+    })();
   };
 
   return (

@@ -14,10 +14,40 @@
 .navbar {
   background: linear-gradient(180deg, #f4f9fd 0%, #eef6fc 100%);
   border-right: 1px solid rgba(26, 58, 92, 0.08);
+  overflow: hidden;
+}
+
+.navbarBrandSection {
+  flex-shrink: 0;
+}
+
+.navbarFooterSection {
+  flex-shrink: 0;
+}
+
+.navbarMenuSection {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.navbar :global([data-grow]) {
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .main {
-  min-height: calc(100vh - 56px);
+  min-height: 100dvh;
   min-width: 0;
   background: #f4f9fd;
+}
+
+.mainInner {
+  padding: 1rem;
+  max-width: 1200px;
+  margin-inline: auto;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { Stack } from "@mantine/core";
 import { LoadingSkeleton } from "@/shared/components/LoadingSkeleton/LoadingSkeleton";
 import type { AlertSummary } from "@/features/alerts/types/alert.types";
@@ -30,16 +30,21 @@ export function IotMonitoringPage({
 }: IotMonitoringPageProps) {
   const [snapshot, setSnapshot] = useState(initialSnapshot);
   const [range, setRange] = useState<IotTimeRange>(initialSnapshot.range);
-  const [pending, startTransition] = useTransition();
+  const [pending, setPending] = useState(false);
 
   const handleRangeChange = (next: IotTimeRange) => {
     setRange(next);
-    startTransition(async () => {
-      const result = await fetchIotMonitoringAction(next);
-      if (result.ok) {
-        setSnapshot(result.data);
+    void (async () => {
+      setPending(true);
+      try {
+        const result = await fetchIotMonitoringAction(next);
+        if (result.ok) {
+          setSnapshot(result.data);
+        }
+      } finally {
+        setPending(false);
       }
-    });
+    })();
   };
 
   return (

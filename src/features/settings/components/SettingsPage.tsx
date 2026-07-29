@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState } from "react";
 import { Button, Checkbox, NumberInput, Stack, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
@@ -15,7 +15,7 @@ type SettingsPageProps = {
 };
 
 export function SettingsPage({ settings, readOnly = false }: SettingsPageProps) {
-  const [pending, startTransition] = useTransition();
+  const [pending, setPending] = useState(false);
   const form = useForm({
     initialValues: {
       farmName: settings.farmName,
@@ -29,14 +29,19 @@ export function SettingsPage({ settings, readOnly = false }: SettingsPageProps) 
   });
 
   const handleSubmit = form.onSubmit((values) => {
-    startTransition(async () => {
-      const result = await updateSettingsAction(values);
-      if (result.ok) {
-        notifications.show({ color: "green", message: "Đã lưu cài đặt" });
-      } else {
-        notifications.show({ color: "red", message: result.message });
+    void (async () => {
+      setPending(true);
+      try {
+        const result = await updateSettingsAction(values);
+        if (result.ok) {
+          notifications.show({ color: "green", message: "Đã lưu cài đặt" });
+        } else {
+          notifications.show({ color: "red", message: result.message });
+        }
+      } finally {
+        setPending(false);
       }
-    });
+    })();
   });
 
   const fieldLock = readOnly ? { readOnly: true } : {};

@@ -1,11 +1,10 @@
 "use client";
 
-import { useTransition } from "react";
 import { AppShell } from "@mantine/core";
 import { logoutAction } from "@/features/auth/actions/login.actions";
 import { FARM_NAV_ITEMS } from "@/shared/constants/navigation";
 import { AppHeader } from "./AppHeader";
-import { AppSidebar } from "./AppSidebar";
+import { SidebarBrand, SidebarDecorFooter, SidebarNavMenu } from "./AppSidebar";
 import { MobileNavBackdrop } from "./MobileNavBackdrop";
 import { useMobileNav } from "./use-mobile-nav";
 import styles from "./AppLayoutShell.module.css";
@@ -31,12 +30,8 @@ export function FarmAppLayout({
   isGuest = false,
 }: FarmAppLayoutProps) {
   const { opened, toggle, close } = useMobileNav();
-  const [, startTransition] = useTransition();
-
   const handleLogout = () => {
-    startTransition(() => {
-      void logoutAction();
-    });
+    void logoutAction();
   };
 
   return (
@@ -44,7 +39,6 @@ export function FarmAppLayout({
       <MobileNavBackdrop opened={opened} onClose={close} />
       <AppShell
         layout="alt"
-        mode="static"
         withBorder={false}
         header={{ height: 60 }}
         navbar={{
@@ -67,9 +61,19 @@ export function FarmAppLayout({
           />
         </AppShell.Header>
         <AppShell.Navbar className={styles.navbar} withBorder={false}>
-          <AppSidebar items={FARM_NAV_ITEMS} variant="farm" />
+          <AppShell.Section className={styles.navbarBrandSection}>
+            <SidebarBrand variant="farm" />
+          </AppShell.Section>
+          <AppShell.Section grow className={styles.navbarMenuSection}>
+            <SidebarNavMenu items={FARM_NAV_ITEMS} variant="farm" />
+          </AppShell.Section>
+          <AppShell.Section className={styles.navbarFooterSection}>
+            <SidebarDecorFooter variant="farm" />
+          </AppShell.Section>
         </AppShell.Navbar>
-        <AppShell.Main className={styles.main}>{children}</AppShell.Main>
+        <AppShell.Main className={styles.main}>
+          <div className={styles.mainInner}>{children}</div>
+        </AppShell.Main>
       </AppShell>
     </>
   );

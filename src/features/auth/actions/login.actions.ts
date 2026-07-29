@@ -1,9 +1,12 @@
 "use server";
 
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { SESSION_COOKIE_NAME } from "@/lib/config/app.config";
 import { getDefaultRedirectForRole } from "@/lib/auth/access-control";
+import {
+  clearAppSessionCookies,
+  setAppSessionCookies,
+  signOutSupabase,
+} from "@/lib/auth/supabase-auth";
 import { toActionResult, type ActionResult } from "@/lib/errors/action-result";
 import { AppError } from "@/lib/errors/app-error";
 import { loginSchema, type LoginSchemaInput } from "../schemas/login.schema";
@@ -18,19 +21,22 @@ export async function loginAction(
       throw new AppError("VALIDATION_ERROR");
     }
     const user = await authService.login(parsed.data);
-    const cookieStore = await cookies();
-    cookieStore.set(SESSION_COOKIE_NAME, user.id, {
-      httpOnly: true,
-      sameSite: "lax",
-      path: "/",
-      maxAge: parsed.data.rememberMe ? 60 * 60 * 24 * 30 : 60 * 60 * 24,
-    });
+    await setAppSessionCookies(
+      {
+        userId: user.id,
+        email: user.email,
+        fullName: user.fullName,
+        role: user.role,
+        farmId: user.farmId,
+      },
+      Boolean(parsed.data.rememberMe),
+    );
     return { redirectTo: getDefaultRedirectForRole(user.role) };
   });
 }
 
 export async function logoutAction(): Promise<void> {
-  const cookieStore = await cookies();
-  cookieStore.delete(SESSION_COOKIE_NAME);
+  await signOutSupabase();
+  await clearAppSessionCookies();
   redirect("/app");
 }

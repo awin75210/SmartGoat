@@ -1,10 +1,23 @@
-import { requireFarmContext } from "@/lib/auth/server-context";
-import { aiAssistantService } from "@/features/ai-assistant/services/ai-assistant.service";
-import { AiAssistantPage } from "@/features/ai-assistant/components/AiAssistantPage";
+import { requireFarmContext, resolveAppSession } from "@/lib/auth/server-context";
+import { chatbotService } from "@/features/ai-chatbot/services/chatbot.service";
+import { AiChatbotPage } from "@/features/ai-chatbot/components/AiChatbotPage";
+import type { ChatConversation } from "@/features/ai-chatbot/types/chatbot.types";
 
 export default async function AiAssistantRoutePage() {
+  const session = await resolveAppSession();
   await requireFarmContext();
-  const suggestedPrompts = await aiAssistantService.getSuggestedPrompts();
+  const suggestedPrompts = chatbotService.getSuggestedPrompts();
 
-  return <AiAssistantPage suggestedPrompts={suggestedPrompts} />;
+  let initialConversations: ChatConversation[] = [];
+  if (!session.isGuest && session.farmId) {
+    initialConversations = await chatbotService.listConversations(session.userId, session.farmId);
+  }
+
+  return (
+    <AiChatbotPage
+      suggestedPrompts={suggestedPrompts}
+      isGuest={session.isGuest}
+      initialConversations={initialConversations}
+    />
+  );
 }
