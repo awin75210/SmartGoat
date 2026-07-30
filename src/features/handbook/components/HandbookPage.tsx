@@ -33,6 +33,10 @@ import {
 } from "../types/handbook.types";
 import { HandbookFavoriteButton } from "./HandbookFavoriteButton";
 import { HandbookSearchAiModal } from "./HandbookSearchAiModal";
+import {
+  articleMatchesSearch,
+  filterHandbookArticles,
+} from "../utils/handbook-search.utils";
 import styles from "./HandbookPage.module.css";
 
 type HandbookPageProps = {
@@ -55,32 +59,54 @@ export function HandbookPage({ articles, favoriteIds, isGuest }: HandbookPagePro
   const [category, setCategory] = useState<ListFilter>("all");
   const [favorites, setFavorites] = useState<Set<string>>(() => new Set(favoriteIds));
   const [dismissedSearchQuery, setDismissedSearchQuery] = useState<string | null>(null);
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
 
   const searchQuery = search.trim();
 
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 400);
+    return () => window.clearTimeout(timer);
+  }, [searchQuery]);
+
   const filtered = useMemo(() => {
-    return articles.filter((a) => {
-      if (category === "favorites" && !favorites.has(a.id)) return false;
-      if (category !== "all" && category !== "favorites" && a.category !== category) return false;
-      if (!search.trim()) return true;
-      const q = search.toLowerCase();
-      return (
-        a.title.toLowerCase().includes(q) ||
-        a.summary.toLowerCase().includes(q) ||
-        a.tags.some((t) => t.toLowerCase().includes(q))
-      );
+    return filterHandbookArticles(articles, {
+      search,
+      category,
+      favoriteIds: favorites,
     });
   }, [articles, search, category, favorites]);
 
+  const hasGlobalSearchMatch = useMemo(() => {
+    if (!debouncedSearchQuery) return false;
+    return articles.some((article) => articleMatchesSearch(article, debouncedSearchQuery));
+  }, [articles, debouncedSearchQuery]);
+
   const isSearchWithNoResults =
-    searchQuery.length > 0 && filtered.length === 0 && category !== "favorites";
-  const showAiModal = isSearchWithNoResults && dismissedSearchQuery !== searchQuery;
+    debouncedSearchQuery.length >= 2 &&
+    !hasGlobalSearchMatch &&
+    category !== "favorites";
+  const showAiModal = isSearchWithNoResults && dismissedSearchQuery !== debouncedSearchQuery;
+
+  const isCategoryFilteredEmpty =
+    searchQuery.length > 0 &&
+    filtered.length === 0 &&
+    hasGlobalSearchMatch &&
+    category !== "all" &&
+    category !== "favorites";
 
   useEffect(() => {
     if (!searchQuery) {
       setDismissedSearchQuery(null);
     }
   }, [searchQuery]);
+
+  useEffect(() => {
+    if (hasGlobalSearchMatch) {
+      setDismissedSearchQuery(null);
+    }
+  }, [hasGlobalSearchMatch]);
 
   const handleFavoriteToggle = (articleId: string, favorited: boolean) => {
     setFavorites((prev) => {
@@ -96,16 +122,18 @@ export function HandbookPage({ articles, favoriteIds, isGuest }: HandbookPagePro
       ? isGuest
         ? "Đăng nhập để lưu bài yêu thích và đọc lại sau."
         : "Bấm biểu tượng trái tim trên bài viết để lưu yêu thích."
-      : searchQuery
-        ? "Thử từ khóa khác hoặc hỏi CapraCare AI để được tư vấn thêm."
-        : "Thử đổi từ khóa hoặc chọn danh mục khác.";
+      : isCategoryFilteredEmpty
+        ? "Có bài phù hợp ở danh mục khác — chọn 「Tất cả」 hoặc đổi bộ lọc."
+        : searchQuery
+          ? "Thử từ khóa khác hoặc hỏi CapraCare AI để được tư vấn thêm."
+          : "Thử đổi từ khóa hoặc chọn danh mục khác.";
 
   return (
     <Stack gap="lg" className={styles.page}>
       <HandbookSearchAiModal
         opened={showAiModal}
-        searchQuery={searchQuery}
-        onClose={() => setDismissedSearchQuery(searchQuery)}
+        searchQuery={debouncedSearchQuery}
+        onClose={() => setDismissedSearchQuery(debouncedSearchQuery)}
       />
       <PageHeader
         title="Sổ tay chăn nuôi"
@@ -177,7 +205,7 @@ export function HandbookPage({ articles, favoriteIds, isGuest }: HandbookPagePro
             isSearchWithNoResults ? (
               <Button
                 component={Link}
-                href={`/app/ai-assistant?q=${encodeURIComponent(searchQuery)}`}
+                href={`/app/ai-assistant?q=${encodeURIComponent(debouncedSearchQuery)}`}
                 color="capraBlue"
                 leftSection={<IconMessageChatbot size={16} stroke={1.5} />}
               >
