@@ -28,6 +28,7 @@ type AiChatbotPanelProps = {
   suggestedPrompts: ChatSuggestedPrompt[];
   isGuest: boolean;
   initialConversations: ChatConversation[];
+  aiApiConfigured?: boolean;
 };
 
 type ChatApiSuccess = {
@@ -45,7 +46,12 @@ type ChatApiFailure = {
   code?: string;
 };
 
-export function AiChatbotPanel({ suggestedPrompts, isGuest, initialConversations }: AiChatbotPanelProps) {
+export function AiChatbotPanel({
+  suggestedPrompts,
+  isGuest,
+  initialConversations,
+  aiApiConfigured = true,
+}: AiChatbotPanelProps) {
   const [conversations, setConversations] = useState<ChatConversation[]>(initialConversations);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -190,6 +196,13 @@ export function AiChatbotPanel({ suggestedPrompts, isGuest, initialConversations
     setLastFailedText(null);
 
     try {
+      const historyForApi = isGuest
+        ? messages
+            .filter((m) => m.role === "user" || m.role === "assistant")
+            .slice(-10)
+            .map((m) => ({ role: m.role, content: m.content }))
+        : undefined;
+
       const res = await fetch("/api/ai/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -197,6 +210,7 @@ export function AiChatbotPanel({ suggestedPrompts, isGuest, initialConversations
         body: JSON.stringify({
           message: trimmed,
           ...(isGuest || !activeId ? {} : { conversationId: activeId }),
+          ...(historyForApi?.length ? { history: historyForApi } : {}),
         }),
       });
 
@@ -321,6 +335,16 @@ export function AiChatbotPanel({ suggestedPrompts, isGuest, initialConversations
               Đăng nhập
             </Text>{" "}
             để lưu lịch sử hội thoại.
+          </Alert>
+        ) : null}
+        {!aiApiConfigured ? (
+          <Alert color="yellow" variant="light" className={styles.guestBanner}>
+            Chế độ trả lời cơ bản (chưa cấu hình Gemini). Thêm{" "}
+            <Text span fw={600}>
+              GEMINI_API_KEY
+            </Text>{" "}
+            vào <Text span fw={600}>.env.local</Text> (lấy tại Google AI Studio) rồi restart dev
+            server.
           </Alert>
         ) : null}
         {showSuggestedPrompts ? (

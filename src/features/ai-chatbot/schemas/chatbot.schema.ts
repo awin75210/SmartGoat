@@ -12,6 +12,15 @@ export const chatRequestSchema = z.object({
     .min(1, "Vui lòng nhập câu hỏi")
     .max(CHAT_MESSAGE_MAX_LENGTH, `Câu hỏi tối đa ${CHAT_MESSAGE_MAX_LENGTH} ký tự`),
   conversationId: z.uuid().optional(),
+  history: z
+    .array(
+      z.object({
+        role: z.enum(["user", "assistant"]),
+        content: z.string().trim().min(1).max(CHAT_MESSAGE_MAX_LENGTH),
+      }),
+    )
+    .max(20)
+    .optional(),
 });
 
 export type ChatRequestInput = z.infer<typeof chatRequestSchema>;

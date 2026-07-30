@@ -21,14 +21,51 @@ export function getSupabaseAnonKey(): string {
   return key;
 }
 
+export type AiProvider = "openai" | "gemini";
+
+export function getAiProvider(): AiProvider {
+  const explicit = process.env.AI_PROVIDER?.trim().toLowerCase();
+  if (explicit === "gemini") return "gemini";
+  if (explicit === "openai") return "openai";
+
+  const base = process.env.AI_API_BASE_URL?.trim() ?? "";
+  if (base.includes("generativelanguage.googleapis.com")) {
+    return "gemini";
+  }
+
+  return "openai";
+}
+
 export function getAiApiKey(): string | undefined {
-  return process.env.AI_API_KEY?.trim() || undefined;
+  const geminiKey = process.env.GEMINI_API_KEY?.trim();
+  const aiKey = process.env.AI_API_KEY?.trim();
+
+  if (getAiProvider() === "gemini") {
+    return geminiKey || aiKey || undefined;
+  }
+  return aiKey || geminiKey || undefined;
+}
+
+export function isAiApiConfigured(): boolean {
+  return Boolean(getAiApiKey());
 }
 
 export function getAiApiBaseUrl(): string {
-  return process.env.AI_API_BASE_URL?.trim() || "https://api.openai.com/v1";
+  const configured = process.env.AI_API_BASE_URL?.trim();
+  if (configured) return configured;
+
+  return getAiProvider() === "gemini"
+    ? "https://generativelanguage.googleapis.com/v1beta/openai"
+    : "https://api.openai.com/v1";
 }
 
 export function getAiModel(): string {
-  return process.env.AI_MODEL?.trim() || "gpt-4o-mini";
+  const configured = process.env.AI_MODEL?.trim();
+  if (configured) return configured;
+
+  return getAiProvider() === "gemini" ? "gemini-2.0-flash" : "gpt-4o-mini";
+}
+
+export function getChatCompletionsUrl(): string {
+  return `${getAiApiBaseUrl().replace(/\/+$/, "")}/chat/completions`;
 }

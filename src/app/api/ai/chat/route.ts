@@ -38,7 +38,7 @@ export async function POST(request: Request) {
     }
 
     const result = auth.isGuest
-      ? await chatbotService.handleGuestMessage(parsed.data.message)
+      ? await chatbotService.handleGuestMessage(parsed.data.message, parsed.data.history)
       : await chatbotService.handleUserMessage({
           userId: auth.userId,
           farmId: auth.farmId,

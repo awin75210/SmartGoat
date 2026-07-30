@@ -10,9 +10,9 @@ import {
 import { createChatRepository } from "../repositories/create-chat.repository";
 import { createKnowledgeRepository } from "../repositories/create-knowledge.repository";
 import { markKnowledgeSourcesUsed } from "../repositories/seed-knowledge.repository";
-import type { ChatApiResponse, ChatSourceRef, RetrievedKnowledge } from "../types/chatbot.types";
+import type { ChatApiResponse, ChatMessage, ChatSourceRef, RetrievedKnowledge } from "../types/chatbot.types";
 import { buildFarmContextSnippet } from "./farm-context.service";
-import { generateAssistantReply } from "./llm.service";
+import { generateAssistantReply, type LlmHistoryTurn } from "./llm.service";
 import { detectQueryIntent } from "./query-intent.service";
 
 const RETRIEVAL_LIMIT = 5;
@@ -35,6 +35,21 @@ function deriveConversationTitle(message: string): string {
   const trimmed = message.trim();
   if (trimmed.length <= 48) return trimmed;
   return `${trimmed.slice(0, 45)}...`;
+}
+
+function toLlmHistory(messages: ChatMessage[]): LlmHistoryTurn[] {
+  return messages
+    .filter((m): m is ChatMessage & { role: "user" | "assistant" } =>
+      m.role === "user" || m.role === "assistant",
+    )
+    .map((m) => ({ role: m.role, content: m.content }));
+}
+
+function toLlmHistoryFromClient(
+  history: { role: "user" | "assistant"; content: string }[] | undefined,
+): LlmHistoryTurn[] {
+  if (!history?.length) return [];
+  return history.map((m) => ({ role: m.role, content: m.content }));
 }
 
 export class ChatbotService {
@@ -75,6 +90,39 @@ export class ChatbotService {
     return { articles, faqs, sources };
   }
 
+  private async composeAssistantReply(params: {
+    farmId: string;
+    message: string;
+    history?: LlmHistoryTurn[];
+  }): Promise<{ replyText: string; sources: ChatSourceRef[] }> {
+    const intent = detectQueryIntent(params.message);
+    const retrieved = await this.retrieveKnowledge(params.message, intent);
+    const farmSnippet = await buildFarmContextSnippet(params.farmId, intent);
+
+    const knowledgeBlock = buildKnowledgeContextBlock(
+      retrieved.articles.map((a) => ({
+        title: a.title,
+        summary: a.summary,
+        content: a.content,
+        category: a.category,
+      })),
+      retrieved.faqs.map((f) => ({ question: f.question, answer: f.answer })),
+    );
+    const farmBlock = buildFarmDataBlock(farmSnippet);
+
+    const { content: replyText } = await generateAssistantReply({
+      systemPrompt: CHATBOT_SYSTEM_PROMPT,
+      knowledgeBlock,
+      farmBlock,
+      userQuestion: params.message,
+      intent,
+      history: params.history,
+    });
+
+    markKnowledgeSourcesUsed(retrieved.sources);
+    return { replyText, sources: retrieved.sources };
+  }
+
   async handleUserMessage(params: {
     userId: string;
     farmId: string;
@@ -83,12 +131,15 @@ export class ChatbotService {
   }): Promise<ChatApiResponse> {
     const { userId, farmId, message } = params;
     let conversationId = params.conversationId;
+    let priorHistory: LlmHistoryTurn[] = [];
 
     if (conversationId) {
       const existing = await this.chatRepo.getConversation(userId, farmId, conversationId);
       if (!existing) {
         throw new AppError("NOT_FOUND");
       }
+      const priorMessages = await this.chatRepo.listMessages(userId, farmId, conversationId);
+      priorHistory = toLlmHistory(priorMessages);
     } else {
       const created = await this.chatRepo.createConversation(userId, farmId, deriveConversationTitle(message));
       conversationId = created.id;
@@ -96,30 +147,11 @@ export class ChatbotService {
 
     await this.chatRepo.appendMessage(userId, farmId, conversationId, "user", message);
 
-    const intent = detectQueryIntent(message);
-    const retrieved = await this.retrieveKnowledge(message, intent);
-    const farmSnippet = await buildFarmContextSnippet(farmId, intent);
-
-    const knowledgeBlock = buildKnowledgeContextBlock(
-      retrieved.articles.map((a) => ({
-        title: a.title,
-        summary: a.summary,
-        content: a.content,
-        category: a.category,
-      })),
-      retrieved.faqs.map((f) => ({ question: f.question, answer: f.answer })),
-    );
-    const farmBlock = buildFarmDataBlock(farmSnippet);
-
-    const replyText = await generateAssistantReply({
-      systemPrompt: CHATBOT_SYSTEM_PROMPT,
-      knowledgeBlock,
-      farmBlock,
-      userQuestion: message,
-      intent,
+    const { replyText, sources } = await this.composeAssistantReply({
+      farmId,
+      message,
+      history: priorHistory,
     });
-
-    markKnowledgeSourcesUsed(retrieved.sources);
 
     const assistantMessage = await this.chatRepo.appendMessage(
       userId,
@@ -127,50 +159,34 @@ export class ChatbotService {
       conversationId,
       "assistant",
       replyText,
-      retrieved.sources,
+      sources,
     );
 
-    const priorMessages = await this.chatRepo.listMessages(userId, farmId, conversationId);
-    if (priorMessages.filter((m) => m.role === "user").length === 1) {
+    const allMessages = await this.chatRepo.listMessages(userId, farmId, conversationId);
+    if (allMessages.filter((m) => m.role === "user").length === 1) {
       await this.chatRepo.touchConversation(conversationId, deriveConversationTitle(message));
     }
 
     return {
       conversationId,
       message: assistantMessage,
-      sources: retrieved.sources,
+      sources,
     };
   }
 
-  /** Guest mode: RAG + reply only, no DB persistence. */
-  async handleGuestMessage(message: string): Promise<ChatApiResponse> {
+  /** Guest mode: RAG + LLM reply, no DB persistence. */
+  async handleGuestMessage(
+    message: string,
+    clientHistory?: { role: "user" | "assistant"; content: string }[],
+  ): Promise<ChatApiResponse> {
     const farmId = DEFAULT_FARM_ID;
     const conversationId = `guest-${randomUUID()}`;
 
-    const intent = detectQueryIntent(message);
-    const retrieved = await this.retrieveKnowledge(message, intent);
-    const farmSnippet = await buildFarmContextSnippet(farmId, intent);
-
-    const knowledgeBlock = buildKnowledgeContextBlock(
-      retrieved.articles.map((a) => ({
-        title: a.title,
-        summary: a.summary,
-        content: a.content,
-        category: a.category,
-      })),
-      retrieved.faqs.map((f) => ({ question: f.question, answer: f.answer })),
-    );
-    const farmBlock = buildFarmDataBlock(farmSnippet);
-
-    const replyText = await generateAssistantReply({
-      systemPrompt: CHATBOT_SYSTEM_PROMPT,
-      knowledgeBlock,
-      farmBlock,
-      userQuestion: message,
-      intent,
+    const { replyText, sources } = await this.composeAssistantReply({
+      farmId,
+      message,
+      history: toLlmHistoryFromClient(clientHistory),
     });
-
-    markKnowledgeSourcesUsed(retrieved.sources);
 
     const now = new Date().toISOString();
     return {
@@ -180,10 +196,10 @@ export class ChatbotService {
         conversationId,
         role: "assistant",
         content: replyText,
-        sources: retrieved.sources,
+        sources,
         createdAt: now,
       },
-      sources: retrieved.sources,
+      sources,
     };
   }
 }

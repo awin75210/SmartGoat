@@ -1,9 +1,21 @@
-import { getAiApiBaseUrl, getAiApiKey, getAiModel } from "@/lib/supabase/env";
+import {
+  getAiApiKey,
+  getAiModel,
+  getAiProvider,
+  getChatCompletionsUrl,
+  isAiApiConfigured,
+} from "@/lib/supabase/env";
+import { buildUserQuestionBlock } from "../prompts/chatbot.prompts";
 import {
   isSmallTalkQuery,
   pickBestFaqForQuestion,
 } from "../utils/knowledge-retrieval.utils";
 import type { QueryIntent } from "./query-intent.service";
+
+export type LlmHistoryTurn = {
+  role: "user" | "assistant";
+  content: string;
+};
 
 export type LlmCompletionInput = {
   systemPrompt: string;
@@ -11,7 +23,49 @@ export type LlmCompletionInput = {
   farmBlock: string;
   userQuestion: string;
   intent: QueryIntent;
+  history?: LlmHistoryTurn[];
 };
+
+export type LlmReplyResult = {
+  content: string;
+  provider: "api" | "fallback";
+};
+
+const MAX_HISTORY_TURNS = 10;
+
+type ChatCompletionMessage = {
+  role: "system" | "user" | "assistant";
+  content: string;
+};
+
+function trimHistory(history: LlmHistoryTurn[] | undefined): LlmHistoryTurn[] {
+  if (!history?.length) return [];
+  return history
+    .filter((turn) => turn.content.trim().length > 0)
+    .slice(-MAX_HISTORY_TURNS);
+}
+
+function buildCurrentTurnUserContent(input: LlmCompletionInput): string {
+  return [
+    input.knowledgeBlock,
+    input.farmBlock,
+    buildUserQuestionBlock(input.userQuestion),
+    "Hãy trả lời trực tiếp USER_QUESTION ở đoạn đầu; chỉ dùng KNOWLEDGE_CONTEXT và FARM_DATA; không lệch sang chủ đề không liên quan.",
+  ].join("\n\n");
+}
+
+function buildChatCompletionMessages(input: LlmCompletionInput): ChatCompletionMessage[] {
+  const messages: ChatCompletionMessage[] = [
+    { role: "system", content: input.systemPrompt },
+  ];
+
+  for (const turn of trimHistory(input.history)) {
+    messages.push({ role: turn.role, content: turn.content });
+  }
+
+  messages.push({ role: "user", content: buildCurrentTurnUserContent(input) });
+  return messages;
+}
 
 function parseFaqsFromKnowledgeBlock(block: string): { question: string; answer: string }[] {
   const faqs: { question: string; answer: string }[] = [];
@@ -88,51 +142,57 @@ function buildFallbackReply(input: LlmCompletionInput): string {
   return reply.trim();
 }
 
-export async function generateAssistantReply(input: LlmCompletionInput): Promise<string> {
+async function callChatCompletionsApi(
+  messages: ChatCompletionMessage[],
+): Promise<string | null> {
   const apiKey = getAiApiKey();
-  if (!apiKey) {
-    return buildFallbackReply(input);
+  if (!apiKey) return null;
+
+  const provider = getAiProvider();
+  const res = await fetch(getChatCompletionsUrl(), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: getAiModel(),
+      temperature: 0.35,
+      messages,
+    }),
+  });
+
+  if (!res.ok) {
+    const errBody = await res.text().catch(() => "");
+    console.error(
+      `[ai-chat] ${provider} request failed`,
+      res.status,
+      errBody.slice(0, 500),
+    );
+    return null;
   }
 
-  const userContent = [
-    input.knowledgeBlock,
-    input.farmBlock,
-    `=== USER_QUESTION ===\n${input.userQuestion}`,
-    "Hãy trả lời trực tiếp USER_QUESTION ở đoạn đầu; chỉ dùng KNOWLEDGE_CONTEXT và FARM_DATA; không lệch sang chủ đề không liên quan.",
-  ].join("\n\n");
+  const json = (await res.json()) as {
+    choices?: { message?: { content?: string } }[];
+  };
+  return json.choices?.[0]?.message?.content?.trim() ?? null;
+}
+
+export async function generateAssistantReply(input: LlmCompletionInput): Promise<LlmReplyResult> {
+  if (!isAiApiConfigured()) {
+    console.warn("[ai-chat] GEMINI_API_KEY / AI_API_KEY chưa cấu hình — dùng fallback RAG");
+    return { content: buildFallbackReply(input), provider: "fallback" };
+  }
 
   try {
-    const res = await fetch(`${getAiApiBaseUrl()}/chat/completions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: getAiModel(),
-        temperature: 0.35,
-        messages: [
-          { role: "system", content: input.systemPrompt },
-          { role: "user", content: userContent },
-        ],
-      }),
-    });
-
-    if (!res.ok) {
-      console.error("[ai-chat] LLM request failed", res.status);
-      return buildFallbackReply(input);
+    const messages = buildChatCompletionMessages(input);
+    const text = await callChatCompletionsApi(messages);
+    if (text) {
+      return { content: text, provider: "api" };
     }
-
-    const json = (await res.json()) as {
-      choices?: { message?: { content?: string } }[];
-    };
-    const text = json.choices?.[0]?.message?.content?.trim();
-    if (!text) {
-      return buildFallbackReply(input);
-    }
-    return text;
   } catch (err) {
     console.error("[ai-chat] LLM error", err instanceof Error ? err.message : "unknown");
-    return buildFallbackReply(input);
   }
+
+  return { content: buildFallbackReply(input), provider: "fallback" };
 }
