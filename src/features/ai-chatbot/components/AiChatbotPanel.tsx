@@ -243,7 +243,7 @@ export function AiChatbotPanel({ suggestedPrompts, isGuest, initialConversations
         <PageHeader title="CapraCare AI" description="Trợ lý tư vấn chăn nuôi dê" />
         <Alert color="blue" title="Đăng nhập để dùng trợ lý AI">
           Lịch sử hội thoại và câu trả lời cá nhân hóa theo trang trại chỉ khả dụng sau khi đăng nhập.{" "}
-          <Text component={Link} href="/login" span c="teal" fw={600}>
+          <Text component={Link} href="/login" span c="capraBlue" fw={600}>
             Đăng nhập
           </Text>
         </Alert>
@@ -259,7 +259,7 @@ export function AiChatbotPanel({ suggestedPrompts, isGuest, initialConversations
             <Text className={styles.pageTitle}>CapraCare AI</Text>
           </div>
           <Group gap={6} className={styles.mobileOnly}>
-            <ActionIcon variant="light" color="teal" size="lg" aria-label="Cuộc trò chuyện mới" onClick={startNewConversation}>
+            <ActionIcon variant="light" color="capraBlue" size="lg" aria-label="Cuộc trò chuyện mới" onClick={startNewConversation}>
               <IconMessagePlus size={18} />
             </ActionIcon>
             <ActionIcon
@@ -427,7 +427,7 @@ export function AiChatbotPanel({ suggestedPrompts, isGuest, initialConversations
                   className={styles.sendBtnMobile}
                   size="input-lg"
                   variant="filled"
-                  color="teal"
+                  color="capraBlue"
                   aria-label="Gửi"
                   onClick={() => void sendMessage(input)}
                   loading={pending}

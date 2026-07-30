@@ -57,7 +57,7 @@ export function AppHeader({
         <Menu shadow="md" width={200} position="bottom-end">
           <Menu.Target>
             <ActionIcon variant="subtle" radius="xl" size="lg" aria-label="Tài khoản">
-              <Avatar radius="xl" size="md" color="capraGreen" className={styles.avatar}>
+              <Avatar radius="xl" size="md" color="capraBlue" className={styles.avatar}>
                 {(userName ?? "K").charAt(0).toUpperCase()}
               </Avatar>
             </ActionIcon>

@@ -1,3 +1,9 @@
+:root {
+  --capra-brand-light: #2382f6;
+  --capra-brand-dark: #1559a2;
+  --capra-brand-gradient: linear-gradient(180deg, var(--capra-brand-light) 0%, var(--capra-brand-dark) 100%);
+}
+
 html,
 body {
   max-width: 100vw;

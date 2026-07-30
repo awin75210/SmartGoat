@@ -12,7 +12,7 @@ type EmptyStateProps = {
 export function EmptyState({ title, description, action, icon }: EmptyStateProps) {
   return (
     <Stack align="center" gap="sm" className={styles.root} py="xl">
-      <ThemeIcon size={56} radius="xl" variant="light" color="capraGreen">
+      <ThemeIcon size={56} radius="xl" variant="light" color="capraBlue">
         {icon ?? <IconInbox size={28} stroke={1.5} />}
       </ThemeIcon>
       <Title order={4} className={styles.title}>

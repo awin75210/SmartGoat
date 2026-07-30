@@ -13,14 +13,14 @@
 }
 
 .navbar {
-  background: linear-gradient(180deg, #1e4a72 0%, #153556 52%, #122d47 100%);
+  background: var(--capra-brand-gradient);
   border-right: none;
   overflow: hidden;
 }
 
 .navbarBrandSection {
   flex-shrink: 0;
-  background: linear-gradient(180deg, #1e4a72 0%, #1a4268 100%);
+  background: transparent;
 }
 
 .navbarFooterSection {
@@ -70,7 +70,7 @@
   padding: 0;
   margin: 0;
   cursor: pointer;
-  background: rgba(15, 40, 68, 0.45);
+  background: rgba(21, 89, 162, 0.42);
 }
 
 @media (min-width: 62em) {

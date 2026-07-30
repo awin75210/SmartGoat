@@ -21,13 +21,13 @@ export function IotBarnStatus({ summary }: IotBarnStatusProps) {
           size={148}
           thickness={14}
           roundCaps
-          sections={[{ value: summary.healthPercent, color: "capraGreen" }]}
+          sections={[{ value: summary.healthPercent, color: "capraBlue" }]}
           label={
             <Stack gap={0} align="center">
               <Text fw={800} size="xl" className={styles.ringValue}>
                 {summary.healthPercent}%
               </Text>
-              <Text size="sm" fw={600} c="capraGreen">
+              <Text size="sm" fw={600} c="capraBlue">
                 {summary.healthLabel}
               </Text>
             </Stack>
@@ -72,7 +72,7 @@ function StatusRow({
           {label}
         </Text>
       </Group>
-      <Text size="sm" fw={700} c="capraGreen">
+      <Text size="sm" fw={700} c="capraBlue">
         {value}
       </Text>
     </Group>

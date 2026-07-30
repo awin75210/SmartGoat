@@ -32,7 +32,7 @@ export function ConfirmDialog({
           <Button variant="default" onClick={onCancel} disabled={loading}>
             {cancelLabel}
           </Button>
-          <Button color="capraGreen" onClick={onConfirm} loading={loading}>
+          <Button color="capraBlue" onClick={onConfirm} loading={loading}>
             {confirmLabel}
           </Button>
         </Group>

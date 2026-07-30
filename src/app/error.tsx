@@ -16,7 +16,7 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
         <Text c="dimmed" ta="center" maw={420}>
           {error.message || "Vui lòng thử tải lại trang."}
         </Text>
-        <Button onClick={reset} color="capraGreen">
+        <Button onClick={reset} color="capraBlue">
           Thử lại
         </Button>
       </Stack>

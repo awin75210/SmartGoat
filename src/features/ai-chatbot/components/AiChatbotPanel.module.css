@@ -240,7 +240,7 @@
 .userBubble {
   align-self: flex-end;
   max-width: 92%;
-  background: #d8f5e4;
+  background: #d9eafd;
   border-radius: 12px 12px 4px 12px;
   padding: 0.5rem 0.75rem;
   margin-left: auto;
@@ -296,7 +296,7 @@
 }
 
 .conversationItemActive {
-  background: rgba(45, 106, 79, 0.12);
+  background: rgba(35, 130, 246, 0.12);
 }
 
 .drawerList {

@@ -113,7 +113,7 @@
 }
 
 .navLink[data-active] {
-  background: var(--mantine-color-capraGreen-6);
+  background: var(--mantine-color-capraBlue-6);
   color: #fff;
 }
 
@@ -131,9 +131,9 @@
 }
 
 .navLinkFarm[data-active] {
-  background: linear-gradient(90deg, #43cd78 0%, #38c068 100%);
+  background: linear-gradient(90deg, #3d9aff 0%, #2382f6 55%, #1a6fcc 100%);
   color: #fff;
-  box-shadow: 0 3px 12px rgba(67, 205, 120, 0.28);
+  box-shadow: 0 3px 12px rgba(35, 130, 246, 0.35);
 }
 
 .navLinkFarm[data-active] svg,

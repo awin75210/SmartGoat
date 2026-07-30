@@ -76,7 +76,7 @@ export function LoginForm() {
             <Anchor size="sm" href="#" onClick={(e) => e.preventDefault()}>
               Quên mật khẩu?
             </Anchor>
-            <Button type="submit" loading={pending} color="capraGreen" size="md">
+            <Button type="submit" loading={pending} color="capraBlue" size="md">
               Đăng nhập
             </Button>
           </Stack>

@@ -1,16 +1,17 @@
 import { createTheme, type MantineColorsTuple } from "@mantine/core";
 
+/** Brand: #2382f6 (sáng) → #1559a2 (tối) */
 const capraBlue: MantineColorsTuple = [
-  "#e8f4fc",
-  "#d0e8f9",
-  "#a1d1f3",
-  "#6fb8ec",
-  "#45a2e6",
-  "#2d94e3",
-  "#1f8de2",
-  "#1079c9",
-  "#006bb5",
-  "#005ca0",
+  "#eef5fe",
+  "#d9eafd",
+  "#b3d5fb",
+  "#8cbff9",
+  "#5ca3f7",
+  "#2382f6",
+  "#1d74e3",
+  "#1559a2",
+  "#124d88",
+  "#0f4275",
 ];
 
 const capraGreen: MantineColorsTuple = [
@@ -27,7 +28,7 @@ const capraGreen: MantineColorsTuple = [
 ];
 
 export const capraCareTheme = createTheme({
-  primaryColor: "capraGreen",
+  primaryColor: "capraBlue",
   colors: {
     capraBlue,
     capraGreen,
@@ -40,6 +41,8 @@ export const capraCareTheme = createTheme({
   defaultRadius: "md",
   other: {
     navyTitle: "#1a3a5c",
+    brandLight: "#2382f6",
+    brandDark: "#1559a2",
     pageBg: "#f4f9fd",
     cardRadius: "14px",
     sidebarWidth: 252,

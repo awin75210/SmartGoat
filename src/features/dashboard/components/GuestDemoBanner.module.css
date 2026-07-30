@@ -1,11 +1,11 @@
 .banner {
-  background: color-mix(in srgb, var(--mantine-color-capraGreen-1) 55%, white);
-  border-color: var(--mantine-color-capraGreen-3);
+  background: color-mix(in srgb, var(--mantine-color-capraBlue-1) 55%, white);
+  border-color: var(--mantine-color-capraBlue-3);
 }
 
 .link {
   font-weight: 600;
-  color: var(--mantine-color-capraGreen-7);
+  color: var(--mantine-color-capraBlue-7);
   text-decoration: none;
 }
 
