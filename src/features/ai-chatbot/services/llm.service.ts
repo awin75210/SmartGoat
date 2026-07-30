@@ -180,7 +180,7 @@ async function callChatCompletionsApi(
 
 export async function generateAssistantReply(input: LlmCompletionInput): Promise<LlmReplyResult> {
   if (!isAiApiConfigured()) {
-    console.warn("[ai-chat] GEMINI_API_KEY / AI_API_KEY chưa cấu hình — dùng fallback RAG");
+    console.warn("[ai-chat] API key LLM chưa cấu hình — dùng fallback RAG");
     return { content: buildFallbackReply(input), provider: "fallback" };
   }
 

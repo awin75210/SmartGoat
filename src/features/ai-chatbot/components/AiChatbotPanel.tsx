@@ -339,12 +339,12 @@ export function AiChatbotPanel({
         ) : null}
         {!aiApiConfigured ? (
           <Alert color="yellow" variant="light" className={styles.guestBanner}>
-            Chế độ trả lời cơ bản (chưa cấu hình Gemini). Thêm{" "}
+            Chế độ trả lời cơ bản (chưa cấu hình LLM). Thêm{" "}
             <Text span fw={600}>
-              GEMINI_API_KEY
+              GROQ_API_KEY
             </Text>{" "}
-            vào <Text span fw={600}>.env.local</Text> (lấy tại Google AI Studio) rồi restart dev
-            server.
+            miễn phí vào <Text span fw={600}>.env.local</Text> (đăng ký tại console.groq.com) hoặc
+            cài Ollama local, rồi restart dev server.
           </Alert>
         ) : null}
         {showSuggestedPrompts ? (
