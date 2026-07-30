@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react";
 import {
   ActionIcon,
   Alert,
@@ -15,11 +15,12 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconAlertCircle, IconHistory, IconMessagePlus, IconSend } from "@tabler/icons-react";
+import { IconAlertCircle, IconHistory, IconMessagePlus, IconSend, IconTrash } from "@tabler/icons-react";
 import Link from "next/link";
 import { formatTimeVi } from "@/shared/utils/format";
+import { ConfirmDialog } from "@/shared/components/ConfirmDialog/ConfirmDialog";
 import { PageHeader } from "@/shared/components/PageHeader/PageHeader";
-import { fetchChatConversations, fetchChatMessages } from "../lib/chat-api-client";
+import { deleteChatConversation, fetchChatConversations, fetchChatMessages } from "../lib/chat-api-client";
 import type { ChatConversation, ChatMessage, ChatSourceRef, ChatSuggestedPrompt } from "../types/chatbot.types";
 import styles from "./AiChatbotPanel.module.css";
 
@@ -56,6 +57,8 @@ export function AiChatbotPanel({ suggestedPrompts, isGuest, initialConversations
   const localMsgRef = useRef(0);
   const mountedRef = useRef(true);
   const [historyOpened, { open: openHistory, close: closeHistory }] = useDisclosure(false);
+  const [deleteTarget, setDeleteTarget] = useState<ChatConversation | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const showSuggestedPrompts = messages.length === 0 && !pending;
 
   useEffect(() => {
@@ -100,6 +103,34 @@ export function AiChatbotPanel({ suggestedPrompts, isGuest, initialConversations
     closeHistory();
   };
 
+  const requestDeleteConversation = (conversation: ChatConversation, event: MouseEvent) => {
+    event.stopPropagation();
+    setDeleteTarget(conversation);
+  };
+
+  const confirmDeleteConversation = async () => {
+    if (!deleteTarget || deleting) return;
+    setDeleting(true);
+    setError(null);
+    try {
+      const result = await deleteChatConversation(deleteTarget.id);
+      if (!mountedRef.current) return;
+      if (!result.ok) {
+        setError(result.message ?? "Không xóa được cuộc trò chuyện");
+        return;
+      }
+      setConversations((prev) => prev.filter((c) => c.id !== deleteTarget.id));
+      if (activeId === deleteTarget.id) {
+        startNewConversation();
+      }
+      setDeleteTarget(null);
+    } finally {
+      if (mountedRef.current) {
+        setDeleting(false);
+      }
+    }
+  };
+
   const conversationList = (
     <Stack gap={4}>
       {conversations.length === 0 ? (
@@ -108,19 +139,30 @@ export function AiChatbotPanel({ suggestedPrompts, isGuest, initialConversations
         </Text>
       ) : (
         conversations.map((c) => (
-          <UnstyledButton
+          <div
             key={c.id}
             className={`${styles.conversationItem} ${c.id === activeId ? styles.conversationItemActive : ""}`}
-            onClick={() => void selectConversation(c.id)}
-            p="xs"
           >
-            <Text size="sm" lineClamp={2}>
-              {c.title}
-            </Text>
-            <Text size="xs" c="dimmed">
-              {formatTimeVi(c.updatedAt)}
-            </Text>
-          </UnstyledButton>
+            <UnstyledButton className={styles.conversationMain} onClick={() => void selectConversation(c.id)} p="xs">
+              <Text size="sm" lineClamp={2}>
+                {c.title}
+              </Text>
+              <Text size="xs" c="dimmed">
+                {formatTimeVi(c.updatedAt)}
+              </Text>
+            </UnstyledButton>
+            <ActionIcon
+              variant="subtle"
+              color="red"
+              size="sm"
+              className={styles.conversationDelete}
+              aria-label={`Xóa cuộc trò chuyện ${c.title}`}
+              onClick={(event) => requestDeleteConversation(c, event)}
+              disabled={pending || deleting}
+            >
+              <IconTrash size={16} />
+            </ActionIcon>
+          </div>
         ))
       )}
     </Stack>
@@ -128,7 +170,7 @@ export function AiChatbotPanel({ suggestedPrompts, isGuest, initialConversations
 
   const sendMessage = async (text: string, retry = false) => {
     const trimmed = text.trim();
-    if (!trimmed || pending || isGuest) return;
+    if (!trimmed || pending) return;
 
     if (!retry) {
       const userMsg: ChatMessage = {
@@ -154,7 +196,7 @@ export function AiChatbotPanel({ suggestedPrompts, isGuest, initialConversations
         credentials: "same-origin",
         body: JSON.stringify({
           message: trimmed,
-          conversationId: activeId ?? undefined,
+          ...(isGuest || !activeId ? {} : { conversationId: activeId }),
         }),
       });
 
@@ -187,7 +229,7 @@ export function AiChatbotPanel({ suggestedPrompts, isGuest, initialConversations
       }
 
       const data = (json as ChatApiSuccess).data;
-      const convId = data.conversationId;
+      const convId = isGuest ? (activeId ?? `guest-session-${++localMsgRef.current}`) : data.conversationId;
       if (!mountedRef.current) return;
       if (!activeId) {
         setActiveId(convId);
@@ -217,7 +259,9 @@ export function AiChatbotPanel({ suggestedPrompts, isGuest, initialConversations
         return hasUser ? [...rest, assistant] : [...rest, userMsg, assistant];
       });
 
-      void refreshConversations();
+      if (!isGuest) {
+        void refreshConversations();
+      }
     } catch (err) {
       if (!mountedRef.current) return;
       console.error("[ai-chat] client send failed", err);
@@ -237,19 +281,8 @@ export function AiChatbotPanel({ suggestedPrompts, isGuest, initialConversations
     return () => cancelAnimationFrame(frame);
   }, [messages, pending]);
 
-  if (isGuest) {
-    return (
-      <Stack gap="md" className={styles.page}>
-        <PageHeader title="CapraCare AI" description="Trợ lý tư vấn chăn nuôi dê" />
-        <Alert color="blue" title="Đăng nhập để dùng trợ lý AI">
-          Lịch sử hội thoại và câu trả lời cá nhân hóa theo trang trại chỉ khả dụng sau khi đăng nhập.{" "}
-          <Text component={Link} href="/login" span c="capraBlue" fw={600}>
-            Đăng nhập
-          </Text>
-        </Alert>
-      </Stack>
-    );
-  }
+  const guestDescription =
+    "Chế độ khách — hỏi AI ngay, lịch sử chỉ trong phiên này (không lưu khi thoát trang).";
 
   return (
     <Stack gap="md" className={styles.page}>
@@ -262,20 +295,34 @@ export function AiChatbotPanel({ suggestedPrompts, isGuest, initialConversations
             <ActionIcon variant="light" color="capraBlue" size="lg" aria-label="Cuộc trò chuyện mới" onClick={startNewConversation}>
               <IconMessagePlus size={18} />
             </ActionIcon>
-            <ActionIcon
-              variant="light"
-              color="gray"
-              size="lg"
-              aria-label="Lịch sử hội thoại"
-              onClick={openHistory}
-            >
-              <IconHistory size={18} />
-            </ActionIcon>
+            {!isGuest ? (
+              <ActionIcon
+                variant="light"
+                color="gray"
+                size="lg"
+                aria-label="Lịch sử hội thoại"
+                onClick={openHistory}
+              >
+                <IconHistory size={18} />
+              </ActionIcon>
+            ) : null}
           </Group>
         </Group>
         <div className={styles.desktopHeader}>
-          <PageHeader title="CapraCare AI" description="Trợ lý tư vấn chăn nuôi dê" />
+          <PageHeader
+            title="CapraCare AI"
+            description={isGuest ? guestDescription : "Trợ lý tư vấn chăn nuôi dê"}
+          />
         </div>
+        {isGuest ? (
+          <Alert color="blue" variant="light" className={styles.guestBanner}>
+            {guestDescription}{" "}
+            <Text component={Link} href="/login" span c="capraBlue" fw={600}>
+              Đăng nhập
+            </Text>{" "}
+            để lưu lịch sử hội thoại.
+          </Alert>
+        ) : null}
         {showSuggestedPrompts ? (
           <div className={styles.promptsWrap}>
             <div className={`${styles.promptsScroll} ${styles.promptsDesktop}`}>
@@ -296,46 +343,70 @@ export function AiChatbotPanel({ suggestedPrompts, isGuest, initialConversations
         ) : null}
       </div>
 
-      <Drawer
-        opened={historyOpened}
-        onClose={closeHistory}
-        title={<span className={styles.historyDrawerTitle}>Lịch sử hội thoại</span>}
-        position="bottom"
-        size="55%"
-        classNames={{ body: styles.drawerList }}
-      >
-        <Button
-          fullWidth
-          leftSection={<IconMessagePlus size={16} />}
-          variant="light"
-          size="xs"
-          mb="sm"
-          onClick={startNewConversation}
+      {!isGuest ? (
+        <Drawer
+          opened={historyOpened}
+          onClose={closeHistory}
+          title={<span className={styles.historyDrawerTitle}>Lịch sử hội thoại</span>}
+          position="bottom"
+          size="55%"
+          classNames={{ body: styles.drawerList }}
         >
-          Cuộc trò chuyện mới
-        </Button>
-        <ScrollArea h="calc(55dvh - 5rem)" type="scroll" offsetScrollbars>
-          {conversationList}
-        </ScrollArea>
-      </Drawer>
+          <Button
+            fullWidth
+            leftSection={<IconMessagePlus size={16} />}
+            variant="light"
+            size="xs"
+            mb="sm"
+            onClick={startNewConversation}
+          >
+            Cuộc trò chuyện mới
+          </Button>
+          <ScrollArea h="calc(55dvh - 5rem)" type="scroll" offsetScrollbars>
+            {conversationList}
+          </ScrollArea>
+        </Drawer>
+      ) : null}
+
+      {!isGuest ? (
+        <ConfirmDialog
+          opened={deleteTarget !== null}
+          title="Xóa cuộc trò chuyện"
+          message={
+            deleteTarget
+              ? `Bạn có chắc muốn xóa "${deleteTarget.title}"? Toàn bộ tin nhắn sẽ bị xóa vĩnh viễn.`
+              : ""
+          }
+          confirmLabel="Xóa"
+          cancelLabel="Hủy"
+          destructive
+          loading={deleting}
+          onConfirm={() => void confirmDeleteConversation()}
+          onCancel={() => {
+            if (!deleting) setDeleteTarget(null);
+          }}
+        />
+      ) : null}
 
       <div className={styles.chatShell}>
         <div className={styles.layout}>
-          <Paper className={styles.sidebar} p="sm" radius="md">
-            <Button
-              fullWidth
-              leftSection={<IconMessagePlus size={16} />}
-              variant="light"
-              size="xs"
-              mb="sm"
-              onClick={startNewConversation}
-            >
-              Cuộc trò chuyện mới
-            </Button>
-            <ScrollArea className={styles.sidebarScroll} type="scroll" offsetScrollbars scrollbars="y">
-              {conversationList}
-            </ScrollArea>
-          </Paper>
+          {!isGuest ? (
+            <Paper className={styles.sidebar} p="sm" radius="md">
+              <Button
+                fullWidth
+                leftSection={<IconMessagePlus size={16} />}
+                variant="light"
+                size="xs"
+                mb="sm"
+                onClick={startNewConversation}
+              >
+                Cuộc trò chuyện mới
+              </Button>
+              <ScrollArea className={styles.sidebarScroll} type="scroll" offsetScrollbars scrollbars="y">
+                {conversationList}
+              </ScrollArea>
+            </Paper>
+          ) : null}
 
           <div className={styles.main}>
             {error ? (
@@ -361,7 +432,9 @@ export function AiChatbotPanel({ suggestedPrompts, isGuest, initialConversations
                 <Stack gap="sm" className={styles.messageList}>
                   {messages.length === 0 && !pending ? (
                     <Text size="sm" c="dimmed">
-                      Hãy đặt câu hỏi về chăn nuôi, môi trường chuồng hoặc sức khỏe đàn dê.
+                      {isGuest
+                        ? "Hãy đặt câu hỏi về chăn nuôi dê. Lịch sử sẽ mất khi bạn đóng tab hoặc thoát trang."
+                        : "Hãy đặt câu hỏi về chăn nuôi, môi trường chuồng hoặc sức khỏe đàn dê."}
                     </Text>
                   ) : null}
                   {messages.map((msg) => (

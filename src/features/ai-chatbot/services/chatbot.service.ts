@@ -1,3 +1,5 @@
+import { randomUUID } from "crypto";
+import { DEFAULT_FARM_ID } from "@/lib/config/app.config";
 import { AppError } from "@/lib/errors/app-error";
 import { CHAT_SUGGESTED_PROMPTS_SEED } from "../data/knowledge.seed";
 import {
@@ -53,6 +55,14 @@ export class ChatbotService {
       throw new AppError("NOT_FOUND");
     }
     return this.chatRepo.listMessages(userId, farmId, conversationId);
+  }
+
+  async deleteConversation(userId: string, farmId: string, conversationId: string) {
+    const conv = await this.chatRepo.getConversation(userId, farmId, conversationId);
+    if (!conv) {
+      throw new AppError("NOT_FOUND");
+    }
+    await this.chatRepo.deleteConversation(userId, farmId, conversationId);
   }
 
   async createConversation(userId: string, farmId: string) {
@@ -128,6 +138,51 @@ export class ChatbotService {
     return {
       conversationId,
       message: assistantMessage,
+      sources: retrieved.sources,
+    };
+  }
+
+  /** Guest mode: RAG + reply only, no DB persistence. */
+  async handleGuestMessage(message: string): Promise<ChatApiResponse> {
+    const farmId = DEFAULT_FARM_ID;
+    const conversationId = `guest-${randomUUID()}`;
+
+    const intent = detectQueryIntent(message);
+    const retrieved = await this.retrieveKnowledge(message, intent);
+    const farmSnippet = await buildFarmContextSnippet(farmId, intent);
+
+    const knowledgeBlock = buildKnowledgeContextBlock(
+      retrieved.articles.map((a) => ({
+        title: a.title,
+        summary: a.summary,
+        content: a.content,
+        category: a.category,
+      })),
+      retrieved.faqs.map((f) => ({ question: f.question, answer: f.answer })),
+    );
+    const farmBlock = buildFarmDataBlock(farmSnippet);
+
+    const replyText = await generateAssistantReply({
+      systemPrompt: CHATBOT_SYSTEM_PROMPT,
+      knowledgeBlock,
+      farmBlock,
+      userQuestion: message,
+      intent,
+    });
+
+    markKnowledgeSourcesUsed(retrieved.sources);
+
+    const now = new Date().toISOString();
+    return {
+      conversationId,
+      message: {
+        id: randomUUID(),
+        conversationId,
+        role: "assistant",
+        content: replyText,
+        sources: retrieved.sources,
+        createdAt: now,
+      },
       sources: retrieved.sources,
     };
   }

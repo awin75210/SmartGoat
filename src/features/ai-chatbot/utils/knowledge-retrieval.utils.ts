@@ -87,7 +87,6 @@ export function scoreKnowledgeArticle(
   intent: QueryIntent,
   query: string,
 ): number {
-  const haystack = [article.title, article.summary, article.content, article.keywords.join(" ")].join("\n");
   return (
     scoreText(queryTokens, article.title) * 3 +
     scoreText(queryTokens, article.summary) * 2 +
@@ -131,7 +130,7 @@ export function rankPublishedKnowledge(
     .sort((a, b) => b.score - a.score);
 
   let pickedArticles = rankedArticles.slice(0, limit).map((r) => r.item);
-  let remaining = Math.max(0, limit - pickedArticles.length);
+  const remaining = Math.max(0, limit - pickedArticles.length);
   let pickedFaqs = rankedFaqs.slice(0, remaining > 0 ? remaining : limit).map((r) => r.item);
 
   if (hasQuerySignal && pickedArticles.length === 0 && pickedFaqs.length === 0) {

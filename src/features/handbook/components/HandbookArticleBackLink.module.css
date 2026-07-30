@@ -1,0 +1,38 @@
+.wrap {
+  margin-bottom: 1rem;
+}
+
+.anchor {
+  height: 0;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 500;
+  color: var(--mantine-color-capraBlue-7);
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+.linkFixed {
+  position: fixed;
+  z-index: 21;
+  margin: 0;
+  padding: 0.35rem 0.65rem;
+  border-radius: var(--mantine-radius-sm);
+  background: rgba(238, 243, 248, 0.94);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 10px rgba(26, 58, 92, 0.08);
+}
+
+@media (min-width: 992px) {
+  .anchor {
+    height: 1.75rem;
+  }
+}

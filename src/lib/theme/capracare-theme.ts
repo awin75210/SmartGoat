@@ -1,4 +1,4 @@
-import { createTheme, type MantineColorsTuple } from "@mantine/core";
+import { Checkbox, createTheme, NumberInput, Select, TextInput, type MantineColorsTuple } from "@mantine/core";
 
 /** Brand: #2382f6 (sáng) → #1559a2 (tối) */
 const capraBlue: MantineColorsTuple = [
@@ -39,6 +39,12 @@ export const capraCareTheme = createTheme({
     fontWeight: "700",
   },
   defaultRadius: "md",
+  components: {
+    TextInput: TextInput.extend({ defaultProps: { size: "md" } }),
+    NumberInput: NumberInput.extend({ defaultProps: { size: "md" } }),
+    Select: Select.extend({ defaultProps: { size: "md" } }),
+    Checkbox: Checkbox.extend({ defaultProps: { size: "md" } }),
+  },
   other: {
     navyTitle: "#1a3a5c",
     brandLight: "#2382f6",

@@ -20,6 +20,10 @@
   flex-shrink: 0;
 }
 
+.guestBanner {
+  margin-top: 0.35rem;
+}
+
 .topRow {
   width: 100%;
 }
@@ -291,8 +295,28 @@
 }
 
 .conversationItem {
-  cursor: pointer;
+  display: flex;
+  align-items: stretch;
+  gap: 0.15rem;
   border-radius: var(--mantine-radius-sm);
+}
+
+.conversationMain {
+  flex: 1;
+  min-width: 0;
+  border-radius: var(--mantine-radius-sm);
+}
+
+.conversationDelete {
+  flex-shrink: 0;
+  align-self: center;
+  margin-right: 0.15rem;
+  opacity: 0.55;
+}
+
+.conversationItem:hover .conversationDelete,
+.conversationDelete:focus-visible {
+  opacity: 1;
 }
 
 .conversationItemActive {

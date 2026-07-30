@@ -4,7 +4,7 @@ export type FarmSettingsRow = {
   timezone: string;
   alert_email: string;
   notify_push: boolean;
-  notify_sms: boolean;
+  notify_email: boolean;
   temperature_high_c: number;
   ammonia_max_ppm: number;
   updated_at: string;
@@ -16,7 +16,7 @@ export type FarmSettings = {
   timezone: string;
   alertEmail: string;
   notifyPush: boolean;
-  notifySms: boolean;
+  notifyEmail: boolean;
   temperatureHighC: number;
   ammoniaMaxPpm: number;
   updatedAt: string;
@@ -27,7 +27,7 @@ export type UpdateFarmSettingsInput = {
   timezone: string;
   alertEmail: string;
   notifyPush: boolean;
-  notifySms: boolean;
+  notifyEmail: boolean;
   temperatureHighC: number;
   ammoniaMaxPpm: number;
 };

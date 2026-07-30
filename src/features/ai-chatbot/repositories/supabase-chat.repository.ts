@@ -109,4 +109,18 @@ export class SupabaseChatRepository implements ChatRepository {
     await this.touchConversation(conversationId);
     return mapChatMessage(data);
   }
+
+  async deleteConversation(userId: string, farmId: string, conversationId: string): Promise<void> {
+    const conv = await this.getConversation(userId, farmId, conversationId);
+    if (!conv) throw new Error("NOT_FOUND");
+
+    const supabase = await this.client();
+    const { error } = await supabase
+      .from("chat_conversations")
+      .delete()
+      .eq("id", conversationId)
+      .eq("user_id", userId)
+      .eq("farm_id", farmId);
+    if (error) throw error;
+  }
 }

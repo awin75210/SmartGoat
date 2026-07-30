@@ -10,6 +10,7 @@ type ConfirmDialogProps = {
   confirmLabel?: string;
   cancelLabel?: string;
   loading?: boolean;
+  destructive?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 };
@@ -21,6 +22,7 @@ export function ConfirmDialog({
   confirmLabel = "Xác nhận",
   cancelLabel = "Hủy",
   loading,
+  destructive,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
@@ -32,7 +34,7 @@ export function ConfirmDialog({
           <Button variant="default" onClick={onCancel} disabled={loading}>
             {cancelLabel}
           </Button>
-          <Button color="capraBlue" onClick={onConfirm} loading={loading}>
+          <Button color={destructive ? "red" : "capraBlue"} onClick={onConfirm} loading={loading}>
             {confirmLabel}
           </Button>
         </Group>

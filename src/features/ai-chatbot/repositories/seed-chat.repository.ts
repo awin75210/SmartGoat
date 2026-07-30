@@ -111,4 +111,12 @@ export class SeedChatRepository implements ChatRepository {
     await this.touchConversation(conversationId);
     return mapChatMessage(row);
   }
+
+  async deleteConversation(userId: string, farmId: string, conversationId: string): Promise<void> {
+    const conv = conversations.get(conversationId);
+    if (!conv) throw new Error("NOT_FOUND");
+    assertOwner(conv, userId, farmId);
+    conversations.delete(conversationId);
+    messages.delete(conversationId);
+  }
 }

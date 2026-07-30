@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 import { Group, Select, Stack, Text, TextInput } from "@mantine/core";
-import { GOAT_GENDER_LABELS, GOAT_HEALTH_LABELS } from "@/shared/constants/goat-status";
+import {
+  GOAT_GENDER_LABELS,
+  GOAT_HEALTH_LABELS,
+} from "@/shared/constants/goat-status";
 import { ResponsiveDataView } from "@/shared/components/ResponsiveDataView/ResponsiveDataView";
 import { StatusBadge } from "@/shared/components/StatusBadge/StatusBadge";
 import { GOAT_HEALTH_COLORS } from "@/shared/constants/goat-status";
@@ -20,9 +23,12 @@ export function HerdList({ goats, filter, onFilterChange }: HerdListProps) {
     <Stack gap="md" className={styles.root}>
       <Group grow preventGrowOverflow={false}>
         <TextInput
+          label="Tìm kiếm"
           placeholder="Tìm theo tên, mã thẻ..."
           value={filter.search ?? ""}
-          onChange={(e) => onFilterChange({ ...filter, search: e.currentTarget.value })}
+          onChange={(e) =>
+            onFilterChange({ ...filter, search: e.currentTarget.value })
+          }
         />
         <Select
           label="Giới tính"
@@ -33,14 +39,20 @@ export function HerdList({ goats, filter, onFilterChange }: HerdListProps) {
           ]}
           value={filter.gender ?? "all"}
           onChange={(v) =>
-            onFilterChange({ ...filter, gender: (v as HerdListFilter["gender"]) ?? "all" })
+            onFilterChange({
+              ...filter,
+              gender: (v as HerdListFilter["gender"]) ?? "all",
+            })
           }
         />
         <Select
           label="Sức khỏe"
           data={[
             { value: "all", label: "Tất cả" },
-            ...Object.entries(GOAT_HEALTH_LABELS).map(([value, label]) => ({ value, label })),
+            ...Object.entries(GOAT_HEALTH_LABELS).map(([value, label]) => ({
+              value,
+              label,
+            })),
           ]}
           value={filter.healthStatus ?? "all"}
           onChange={(v) =>
@@ -60,7 +72,12 @@ export function HerdList({ goats, filter, onFilterChange }: HerdListProps) {
             key: "name",
             header: "Tên",
             render: (g) => (
-              <Text component={Link} href={`/app/herd/${g.id}`} fw={600} className={styles.link}>
+              <Text
+                component={Link}
+                href={`/app/herd/${g.id}`}
+                fw={600}
+                className={styles.link}
+              >
                 {g.name}
               </Text>
             ),
@@ -81,7 +98,11 @@ export function HerdList({ goats, filter, onFilterChange }: HerdListProps) {
               />
             ),
           },
-          { key: "weight", header: "Cân nặng", render: (g) => `${g.weightKg} kg` },
+          {
+            key: "weight",
+            header: "Cân nặng",
+            render: (g) => `${g.weightKg} kg`,
+          },
         ]}
         mobileCard={(g) => (
           <Stack gap={4}>

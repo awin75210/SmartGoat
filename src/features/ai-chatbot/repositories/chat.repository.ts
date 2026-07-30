@@ -14,4 +14,5 @@ export interface ChatRepository {
     content: string,
     sources?: ChatSourceRef[],
   ): Promise<ChatMessage>;
+  deleteConversation(userId: string, farmId: string, conversationId: string): Promise<void>;
 }

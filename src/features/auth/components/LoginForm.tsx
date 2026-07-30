@@ -49,10 +49,7 @@ export function LoginForm() {
         <Title order={2} className={styles.title}>
           Đăng nhập
         </Title>
-        <Text size="sm" c="dimmed">
-          Dùng email và mật khẩu tài khoản Supabase Auth (cần bản ghi trong bảng profiles). Demo
-          local (tắt Supabase trong .env): owner@capracare.vn / 123456
-        </Text>
+
         <form onSubmit={handleSubmit}>
           <Stack gap="md">
             <TextInput

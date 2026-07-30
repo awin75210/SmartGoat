@@ -32,3 +32,17 @@ export async function fetchChatMessages(
   }
   return json;
 }
+
+export async function deleteChatConversation(
+  conversationId: string,
+): Promise<ApiSuccess<null> | ApiFailure> {
+  const res = await fetch(`/api/ai/conversations/${conversationId}`, {
+    method: "DELETE",
+    credentials: "same-origin",
+  });
+  const json = await parseApiJson<null>(res);
+  if (!res.ok || !json.ok) {
+    return json.ok ? { ok: false, message: "Không xóa được cuộc trò chuyện" } : json;
+  }
+  return json;
+}

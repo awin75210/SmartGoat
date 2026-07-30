@@ -1,6 +1,7 @@
 import { AppError } from "@/lib/errors/app-error";
 import { createHandbookRepository } from "../repositories/create-handbook.repository";
 import type { HandbookArticle } from "../types/handbook.types";
+import { pickRelatedHandbookArticles } from "../utils/handbook-sidebar.utils";
 
 export class HandbookService {
   private readonly repo = createHandbookRepository();
@@ -15,6 +16,11 @@ export class HandbookService {
       throw new AppError("NOT_FOUND");
     }
     return article;
+  }
+
+  async getRelatedArticles(articleId: string, limit = 5): Promise<HandbookArticle[]> {
+    const [current, all] = await Promise.all([this.getArticle(articleId), this.listArticles()]);
+    return pickRelatedHandbookArticles(current, all, limit);
   }
 }
 

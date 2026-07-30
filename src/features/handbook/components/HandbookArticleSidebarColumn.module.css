@@ -1,0 +1,33 @@
+.anchor {
+  width: 100%;
+  min-height: 1px;
+}
+
+.flow {
+  position: static;
+  width: 100%;
+}
+
+.fixed {
+  position: fixed;
+  z-index: 20;
+  max-height: calc(100dvh - 60px - 2.5rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.fixed::-webkit-scrollbar {
+  width: 6px;
+}
+
+.fixed::-webkit-scrollbar-thumb {
+  background: rgba(26, 58, 92, 0.15);
+  border-radius: 999px;
+}
+
+@media (min-width: 992px) {
+  .anchor {
+    width: 272px;
+  }
+}

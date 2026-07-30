@@ -5,7 +5,7 @@ export const updateSettingsSchema = z.object({
   timezone: z.string().min(1),
   alertEmail: z.email(),
   notifyPush: z.boolean(),
-  notifySms: z.boolean(),
+  notifyEmail: z.boolean(),
   temperatureHighC: z.number().min(15).max(45),
   ammoniaMaxPpm: z.number().min(1).max(50),
 });

@@ -1,0 +1,62 @@
+.sidebar {
+  width: 100%;
+}
+
+.panel {
+  background: #fff;
+}
+
+.panelLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  letter-spacing: 0.06em;
+}
+
+.panelIcon {
+  vertical-align: middle;
+}
+
+.panelTitle {
+  color: #1a3a5c;
+  font-size: 0.9375rem;
+}
+
+.tocLink {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.4rem 0.55rem;
+  border-radius: var(--mantine-radius-sm);
+  font-size: var(--mantine-font-size-sm);
+  color: #2c4a66;
+  line-height: 1.4;
+  border-left: 2px solid transparent;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.tocLink:hover {
+  background: rgba(35, 130, 246, 0.06);
+  border-left-color: var(--category-accent, #2382f6);
+  color: #1559a2;
+}
+
+.relatedLink {
+  display: block;
+  padding: 0.5rem 0.55rem;
+  border-radius: var(--mantine-radius-sm);
+  color: inherit;
+  text-decoration: none;
+  border: 1px solid rgba(26, 58, 92, 0.08);
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.relatedLink:hover {
+  background: rgba(35, 130, 246, 0.05);
+  border-color: rgba(35, 130, 246, 0.2);
+}
+
+.relatedTitle {
+  color: #1a3a5c;
+  line-height: 1.35;
+}

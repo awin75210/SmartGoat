@@ -8,7 +8,7 @@ export const FARM_SETTINGS_SEED: FarmSettingsRow = {
   timezone: "Asia/Ho_Chi_Minh",
   alert_email: "owner@capracare.demo",
   notify_push: true,
-  notify_sms: false,
+  notify_email: true,
   temperature_high_c: 28,
   ammonia_max_ppm: 10,
   updated_at: SEED_REFERENCE_ISO,
