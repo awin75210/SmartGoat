@@ -6,6 +6,7 @@ type AiChatbotPageProps = {
   isGuest: boolean;
   initialConversations: ChatConversation[];
   aiApiConfigured: boolean;
+  initialQuery?: string;
 };
 
 export function AiChatbotPage({
@@ -13,6 +14,7 @@ export function AiChatbotPage({
   isGuest,
   initialConversations,
   aiApiConfigured,
+  initialQuery = "",
 }: AiChatbotPageProps) {
   return (
     <AiChatbotPanel
@@ -20,6 +22,7 @@ export function AiChatbotPage({
       isGuest={isGuest}
       initialConversations={initialConversations}
       aiApiConfigured={aiApiConfigured}
+      initialQuery={initialQuery}
     />
   );
 }

@@ -29,6 +29,7 @@ type AiChatbotPanelProps = {
   isGuest: boolean;
   initialConversations: ChatConversation[];
   aiApiConfigured?: boolean;
+  initialQuery?: string;
 };
 
 type ChatApiSuccess = {
@@ -51,11 +52,12 @@ export function AiChatbotPanel({
   isGuest,
   initialConversations,
   aiApiConfigured = true,
+  initialQuery = "",
 }: AiChatbotPanelProps) {
   const [conversations, setConversations] = useState<ChatConversation[]>(initialConversations);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState(initialQuery);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastFailedText, setLastFailedText] = useState<string | null>(null);

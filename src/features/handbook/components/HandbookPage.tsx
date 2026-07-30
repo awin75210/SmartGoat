@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, type CSSProperties, type MouseEvent } from "react";
+import { useEffect, useMemo, useState, type CSSProperties, type MouseEvent } from "react";
 import {
   Badge,
   Button,
@@ -16,6 +16,7 @@ import {
   IconBabyCarriage,
   IconHeart,
   IconLeaf,
+  IconMessageChatbot,
   IconPlant2,
   IconSearch,
   IconStethoscope,
@@ -31,6 +32,7 @@ import {
   type HandbookCategory,
 } from "../types/handbook.types";
 import { HandbookFavoriteButton } from "./HandbookFavoriteButton";
+import { HandbookSearchAiModal } from "./HandbookSearchAiModal";
 import styles from "./HandbookPage.module.css";
 
 type HandbookPageProps = {
@@ -52,6 +54,9 @@ export function HandbookPage({ articles, favoriteIds, isGuest }: HandbookPagePro
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<ListFilter>("all");
   const [favorites, setFavorites] = useState<Set<string>>(() => new Set(favoriteIds));
+  const [dismissedSearchQuery, setDismissedSearchQuery] = useState<string | null>(null);
+
+  const searchQuery = search.trim();
 
   const filtered = useMemo(() => {
     return articles.filter((a) => {
@@ -67,6 +72,16 @@ export function HandbookPage({ articles, favoriteIds, isGuest }: HandbookPagePro
     });
   }, [articles, search, category, favorites]);
 
+  const isSearchWithNoResults =
+    searchQuery.length > 0 && filtered.length === 0 && category !== "favorites";
+  const showAiModal = isSearchWithNoResults && dismissedSearchQuery !== searchQuery;
+
+  useEffect(() => {
+    if (!searchQuery) {
+      setDismissedSearchQuery(null);
+    }
+  }, [searchQuery]);
+
   const handleFavoriteToggle = (articleId: string, favorited: boolean) => {
     setFavorites((prev) => {
       const next = new Set(prev);
@@ -81,10 +96,17 @@ export function HandbookPage({ articles, favoriteIds, isGuest }: HandbookPagePro
       ? isGuest
         ? "Đăng nhập để lưu bài yêu thích và đọc lại sau."
         : "Bấm biểu tượng trái tim trên bài viết để lưu yêu thích."
-      : "Thử đổi từ khóa hoặc chọn danh mục khác.";
+      : searchQuery
+        ? "Thử từ khóa khác hoặc hỏi CapraCare AI để được tư vấn thêm."
+        : "Thử đổi từ khóa hoặc chọn danh mục khác.";
 
   return (
     <Stack gap="lg" className={styles.page}>
+      <HandbookSearchAiModal
+        opened={showAiModal}
+        searchQuery={searchQuery}
+        onClose={() => setDismissedSearchQuery(searchQuery)}
+      />
       <PageHeader
         title="Sổ tay chăn nuôi"
         description={
@@ -151,6 +173,18 @@ export function HandbookPage({ articles, favoriteIds, isGuest }: HandbookPagePro
         <EmptyState
           title={category === "favorites" ? "Chưa có bài yêu thích" : "Không tìm thấy bài viết"}
           description={emptyDescription}
+          action={
+            isSearchWithNoResults ? (
+              <Button
+                component={Link}
+                href={`/app/ai-assistant?q=${encodeURIComponent(searchQuery)}`}
+                color="capraBlue"
+                leftSection={<IconMessageChatbot size={16} stroke={1.5} />}
+              >
+                Hỏi trợ lý AI
+              </Button>
+            ) : undefined
+          }
         />
       ) : (
         <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md" className={styles.articleGrid}>

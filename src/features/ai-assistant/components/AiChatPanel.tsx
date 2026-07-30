@@ -1,12 +1,23 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Button, Group, Paper, ScrollArea, Stack, Text, Textarea } from "@mantine/core";
+import {
+  Button,
+  Group,
+  Paper,
+  ScrollArea,
+  Stack,
+  Text,
+  Textarea,
+} from "@mantine/core";
 import { IconSend } from "@tabler/icons-react";
 import { formatTimeVi } from "@/shared/utils/format";
 import { PageHeader } from "@/shared/components/PageHeader/PageHeader";
 import { askAiAssistantAction } from "../actions/ai-assistant.actions";
-import type { AiChatMessage, AiSuggestedPrompt } from "../types/ai-assistant.types";
+import type {
+  AiChatMessage,
+  AiSuggestedPrompt,
+} from "../types/ai-assistant.types";
 import styles from "./AiChatPanel.module.css";
 
 const MOCK_DELAY_MS = 900;
@@ -23,7 +34,8 @@ const INITIAL_MESSAGES: AiChatMessage[] = [
   {
     id: "sample-user",
     role: "user",
-    content: "Dê con nhà tôi bị tiêu chảy, phân lỏng màu vàng, ăn kém từ sáng nay. Tôi nên làm gì?",
+    content:
+      "Dê con nhà tôi bị tiêu chảy, phân lỏng màu vàng, ăn kém từ sáng nay. Tôi nên làm gì?",
     createdAt: SEED_CHAT_TIME,
   },
   {
@@ -62,9 +74,7 @@ export function AiChatPanel({ suggestedPrompts }: AiChatPanelProps) {
     await new Promise((r) => setTimeout(r, MOCK_DELAY_MS));
 
     const result = await askAiAssistantAction(trimmed);
-    const replyText = result.ok
-      ? result.data.reply
-      : result.message;
+    const replyText = result.ok ? result.data.reply : result.message;
     const assistantMsg: AiChatMessage = {
       id: `a-${++idRef.current}`,
       role: "assistant",
@@ -77,10 +87,18 @@ export function AiChatPanel({ suggestedPrompts }: AiChatPanelProps) {
 
   return (
     <Stack gap="md" className={styles.page}>
-      <PageHeader title="CapraCare AI" description="Trợ lý tư vấn chăn nuôi dê" />
+      <PageHeader
+        title="CapraCare AI"
+        description="Trợ lý tư vấn chăn nuôi dê"
+      />
       <Group gap="xs" className={styles.prompts}>
         {suggestedPrompts.map((sp) => (
-          <Button key={sp.id} variant="light" size="xs" onClick={() => void sendMessage(sp.prompt)}>
+          <Button
+            key={sp.id}
+            variant="light"
+            size="xs"
+            onClick={() => void sendMessage(sp.prompt)}
+          >
             {sp.label}
           </Button>
         ))}
@@ -91,7 +109,9 @@ export function AiChatPanel({ suggestedPrompts }: AiChatPanelProps) {
             {messages.map((msg) => (
               <div
                 key={msg.id}
-                className={msg.role === "user" ? styles.userBubble : styles.botBubble}
+                className={
+                  msg.role === "user" ? styles.userBubble : styles.botBubble
+                }
               >
                 <Text size="sm">{msg.content}</Text>
                 <Text size="xs" c="dimmed" mt={4}>
@@ -134,7 +154,8 @@ export function AiChatPanel({ suggestedPrompts }: AiChatPanelProps) {
         </Group>
       </Paper>
       <Text size="xs" c="dimmed" className={styles.disclaimer}>
-        AI chỉ cung cấp thông tin tham khảo. Trường hợp nghiêm trọng, vui lòng liên hệ bác sĩ thú y.
+        AI chỉ cung cấp thông tin tham khảo. Trường hợp nghiêm trọng, vui lòng
+        liên hệ bác sĩ thú y.
       </Text>
     </Stack>
   );

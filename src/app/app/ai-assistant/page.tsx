@@ -4,9 +4,15 @@ import { chatbotService } from "@/features/ai-chatbot/services/chatbot.service";
 import { AiChatbotPage } from "@/features/ai-chatbot/components/AiChatbotPage";
 import type { ChatConversation } from "@/features/ai-chatbot/types/chatbot.types";
 
-export default async function AiAssistantRoutePage() {
+export default async function AiAssistantRoutePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
   const session = await resolveAppSession();
   await requireFarmContext();
+  const { q } = await searchParams;
+  const initialQuery = q?.trim() ?? "";
   const suggestedPrompts = chatbotService.getSuggestedPrompts();
   const aiApiConfigured = isAiApiConfigured();
 
@@ -21,6 +27,7 @@ export default async function AiAssistantRoutePage() {
       isGuest={session.isGuest}
       initialConversations={initialConversations}
       aiApiConfigured={aiApiConfigured}
+      initialQuery={initialQuery}
     />
   );
 }
