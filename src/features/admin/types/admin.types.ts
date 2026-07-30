@@ -64,3 +64,27 @@ export type AdminDashboardStats = {
   offlineDevices: number;
   userCount: number;
 };
+
+export type CreateFarmRowInput = {
+  id: string;
+  name: string;
+  location: string;
+  ownerEmail: string;
+  goatCount?: number;
+  nowIso: string;
+};
+
+export type CreateFarmInput = {
+  name: string;
+  location: string;
+  ownerFullName: string;
+  ownerEmail: string;
+  ownerPassword: string;
+  goatCount?: number;
+};
+
+export type CreateFarmResult = {
+  farm: Farm;
+  owner: AdminUser | null;
+  note?: string;
+};

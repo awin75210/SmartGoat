@@ -18,6 +18,7 @@ type ResponsiveDataViewProps<T> = {
   getRowKey: (row: T) => string;
   mobileCard: (row: T) => React.ReactNode;
   emptyState?: React.ReactNode;
+  onRowClick?: (row: T) => void;
 };
 
 export function ResponsiveDataView<T>({
@@ -26,6 +27,7 @@ export function ResponsiveDataView<T>({
   getRowKey,
   mobileCard,
   emptyState,
+  onRowClick,
 }: ResponsiveDataViewProps<T>) {
   const isMobile = useMediaQuery(`(max-width: ${BREAKPOINTS.mobile}px)`);
 
@@ -37,7 +39,11 @@ export function ResponsiveDataView<T>({
     return (
       <Stack gap="sm" className={styles.mobileList}>
         {data.map((row) => (
-          <Box key={getRowKey(row)} className={styles.mobileCard}>
+          <Box
+            key={getRowKey(row)}
+            className={`${styles.mobileCard}${onRowClick ? ` ${styles.clickable}` : ""}`}
+            onClick={onRowClick ? () => onRowClick(row) : undefined}
+          >
             {mobileCard(row)}
           </Box>
         ))}
@@ -59,7 +65,11 @@ export function ResponsiveDataView<T>({
         </Table.Thead>
         <Table.Tbody>
           {data.map((row) => (
-            <Table.Tr key={getRowKey(row)}>
+            <Table.Tr
+              key={getRowKey(row)}
+              className={onRowClick ? styles.clickableRow : undefined}
+              onClick={onRowClick ? () => onRowClick(row) : undefined}
+            >
               {columns
                 .filter((c) => !c.hideOnMobile)
                 .map((col) => (

@@ -13,10 +13,12 @@ export function useLogout() {
       try {
         const result = await logoutAction();
         if (result.ok) {
+          // Full navigation — do not setState after this or React 19 may warn during teardown.
           window.location.assign(result.data.redirectTo);
           return;
         }
-      } finally {
+        setLoggingOut(false);
+      } catch {
         setLoggingOut(false);
       }
     })();

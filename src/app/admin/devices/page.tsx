@@ -1,8 +1,5 @@
-import { adminService } from "@/features/admin/services/admin.service";
-import { AdminDevicesPage } from "@/features/admin/components/AdminDevicesPage";
+import { redirect } from "next/navigation";
 
-export default async function AdminDevicesRoutePage() {
-  const devices = await adminService.listDevices();
-
-  return <AdminDevicesPage devices={devices} />;
+export default function AdminDevicesRedirectPage() {
+  redirect("/admin/farms");
 }

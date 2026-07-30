@@ -1,38 +1,53 @@
-import { Table, Text } from "@mantine/core";
 import { PageHeader } from "@/shared/components/PageHeader/PageHeader";
-import type { AdminUser } from "../types/admin.types";
+import { ResponsiveDataView } from "@/shared/components/ResponsiveDataView/ResponsiveDataView";
+import type { AdminUser, Farm } from "../types/admin.types";
 import styles from "./AdminUsersPage.module.css";
 
 type AdminUsersPageProps = {
   users: AdminUser[];
+  farms: Farm[];
 };
 
-export function AdminUsersPage({ users }: AdminUsersPageProps) {
+export function AdminUsersPage({ users, farms }: AdminUsersPageProps) {
+  const farmNameById = new Map(farms.map((f) => [f.id, f.name]));
+
   return (
     <div className={styles.page}>
-      <PageHeader title="Người dùng hệ thống" description="Tài khoản truy cập CapraCare" />
-      <Table striped highlightOnHover withTableBorder className={styles.table}>
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th>Họ tên</Table.Th>
-            <Table.Th>Email</Table.Th>
-            <Table.Th>Vai trò</Table.Th>
-            <Table.Th>Trang trại</Table.Th>
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          {users.map((user) => (
-            <Table.Tr key={user.id}>
-              <Table.Td>{user.fullName}</Table.Td>
-              <Table.Td>{user.email}</Table.Td>
-              <Table.Td>
-                <Text size="sm">{user.role === "admin" ? "Quản trị" : "Chủ trại"}</Text>
-              </Table.Td>
-              <Table.Td>{user.farmId ?? "—"}</Table.Td>
-            </Table.Tr>
-          ))}
-        </Table.Tbody>
-      </Table>
+      <PageHeader
+        title="Người dùng hệ thống"
+        description="Chủ trại được gán một trang trại — mỗi trại có IoT và dữ liệu riêng."
+      />
+      <ResponsiveDataView
+        data={users}
+        getRowKey={(user) => user.id}
+        columns={[
+          { key: "name", header: "Họ tên", render: (user) => user.fullName },
+          { key: "email", header: "Email", render: (user) => user.email },
+          {
+            key: "role",
+            header: "Vai trò",
+            render: (user) => (user.role === "admin" ? "Quản trị" : "Chủ trại"),
+          },
+          {
+            key: "farm",
+            header: "Trang trại",
+            render: (user) =>
+              user.farmId ? (farmNameById.get(user.farmId) ?? user.farmId) : "—",
+          },
+        ]}
+        mobileCard={(user) => (
+          <>
+            <strong>{user.fullName}</strong>
+            <div>{user.email}</div>
+            <div>
+              {user.role === "admin" ? "Quản trị" : "Chủ trại"}
+              {user.farmId
+                ? ` · ${farmNameById.get(user.farmId) ?? user.farmId}`
+                : ""}
+            </div>
+          </>
+        )}
+      />
     </div>
   );
 }

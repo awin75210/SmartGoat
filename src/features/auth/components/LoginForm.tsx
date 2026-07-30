@@ -8,7 +8,6 @@ import {
   Paper,
   PasswordInput,
   Stack,
-  Text,
   TextInput,
   Title,
 } from "@mantine/core";
@@ -29,7 +28,8 @@ export function LoginForm() {
       try {
         const result = await loginAction({ email, password, rememberMe });
         if (result.ok) {
-          window.location.href = result.data.redirectTo;
+          // Full navigation — do not setState after this or React 19 may warn during teardown.
+          window.location.assign(result.data.redirectTo);
           return;
         }
         notifications.show({
@@ -37,7 +37,8 @@ export function LoginForm() {
           title: "Đăng nhập thất bại",
           message: result.message,
         });
-      } finally {
+        setPending(false);
+      } catch {
         setPending(false);
       }
     })();

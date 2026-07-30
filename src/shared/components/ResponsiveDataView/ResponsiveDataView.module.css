@@ -12,3 +12,16 @@
 .table {
   font-size: 0.875rem;
 }
+
+.clickable {
+  cursor: pointer;
+}
+
+.clickable:hover {
+  border-color: rgba(21, 89, 162, 0.25);
+  background: rgba(21, 89, 162, 0.03);
+}
+
+.clickableRow {
+  cursor: pointer;
+}

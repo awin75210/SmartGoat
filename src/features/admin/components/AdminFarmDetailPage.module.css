@@ -1,0 +1,21 @@
+.page {
+  width: 100%;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--mantine-color-capraBlue-6);
+  text-decoration: none;
+}
+
+.backLink:hover {
+  text-decoration: underline;
+}
+
+.summary {
+  background: var(--mantine-color-gray-0);
+}

@@ -18,4 +18,12 @@ export const AUTH_USERS_SEED: AuthUserRow[] = [
     role: "admin",
     farm_id: null,
   },
+  {
+    id: "user-owner-002",
+    email: "binhan@capracare.demo",
+    password_hash: "123456",
+    full_name: "Trần Bình An",
+    role: "farm_owner",
+    farm_id: "farm-capracare-002",
+  },
 ];

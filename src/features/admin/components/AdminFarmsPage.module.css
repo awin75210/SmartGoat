@@ -1,3 +1,8 @@
 .page {
   width: 100%;
 }
+
+.rowHint {
+  color: var(--mantine-color-dimmed);
+  flex-shrink: 0;
+}
