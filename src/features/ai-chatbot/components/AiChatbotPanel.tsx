@@ -17,6 +17,7 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { IconAlertCircle, IconHistory, IconMessagePlus, IconSend, IconTrash } from "@tabler/icons-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { formatTimeVi } from "@/shared/utils/format";
 import { ConfirmDialog } from "@/shared/components/ConfirmDialog/ConfirmDialog";
 import { PageHeader } from "@/shared/components/PageHeader/PageHeader";
@@ -29,7 +30,6 @@ type AiChatbotPanelProps = {
   isGuest: boolean;
   initialConversations: ChatConversation[];
   aiApiConfigured?: boolean;
-  initialQuery?: string;
 };
 
 type ChatApiSuccess = {
@@ -52,12 +52,12 @@ export function AiChatbotPanel({
   isGuest,
   initialConversations,
   aiApiConfigured = true,
-  initialQuery = "",
 }: AiChatbotPanelProps) {
+  const searchParams = useSearchParams();
   const [conversations, setConversations] = useState<ChatConversation[]>(initialConversations);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [input, setInput] = useState(initialQuery);
+  const [input, setInput] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastFailedText, setLastFailedText] = useState<string | null>(null);
@@ -75,6 +75,13 @@ export function AiChatbotPanel({
       mountedRef.current = false;
     };
   }, []);
+
+  useEffect(() => {
+    const query = searchParams.get("q")?.trim();
+    if (query) {
+      setInput(query);
+    }
+  }, [searchParams]);
 
   const refreshConversations = useCallback(async () => {
     if (isGuest) return;

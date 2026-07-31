@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAuthenticatedFarmContext } from "@/lib/auth/server-context";
 import { toActionResult, type ActionResult } from "@/lib/errors/action-result";
@@ -22,8 +21,6 @@ export async function toggleHandbookFavoriteAction(
     }
 
     const result = await handbookFavoriteService.toggleFavorite(ctx.userId, parsed.data.articleId);
-    revalidatePath("/app/handbook");
-    revalidatePath(`/app/handbook/${parsed.data.articleId}`);
     return { ...result, articleId: parsed.data.articleId };
   });
 }

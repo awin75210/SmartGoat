@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import { AppRouteFallback } from "@/shared/components/AppRouteFallback/AppRouteFallback";
 import { AiChatbotPanel } from "../components/AiChatbotPanel";
 import type { ChatConversation, ChatSuggestedPrompt } from "../types/chatbot.types";
 
@@ -6,7 +8,6 @@ type AiChatbotPageProps = {
   isGuest: boolean;
   initialConversations: ChatConversation[];
   aiApiConfigured: boolean;
-  initialQuery?: string;
 };
 
 export function AiChatbotPage({
@@ -14,15 +15,15 @@ export function AiChatbotPage({
   isGuest,
   initialConversations,
   aiApiConfigured,
-  initialQuery = "",
 }: AiChatbotPageProps) {
   return (
-    <AiChatbotPanel
-      suggestedPrompts={suggestedPrompts}
-      isGuest={isGuest}
-      initialConversations={initialConversations}
-      aiApiConfigured={aiApiConfigured}
-      initialQuery={initialQuery}
-    />
+    <Suspense fallback={<AppRouteFallback />}>
+      <AiChatbotPanel
+        suggestedPrompts={suggestedPrompts}
+        isGuest={isGuest}
+        initialConversations={initialConversations}
+        aiApiConfigured={aiApiConfigured}
+      />
+    </Suspense>
   );
 }

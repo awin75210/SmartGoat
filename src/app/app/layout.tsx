@@ -1,7 +1,9 @@
+import { Suspense } from "react";
 import { requireFarmContext, resolveAppSession } from "@/lib/auth/server-context";
 import { adminService } from "@/features/admin/services/admin.service";
 import { alertService } from "@/features/alerts/services/alert.service";
 import { FarmAppLayout } from "@/shared/components/AppShell/FarmAppLayout";
+import { AppRouteFallback } from "@/shared/components/AppRouteFallback/AppRouteFallback";
 
 export default async function AppAreaLayout({
   children,
@@ -22,7 +24,7 @@ export default async function AppAreaLayout({
       notificationCount={alertCount}
       isGuest={isGuest}
     >
-      {children}
+      <Suspense fallback={<AppRouteFallback />}>{children}</Suspense>
     </FarmAppLayout>
   );
 }

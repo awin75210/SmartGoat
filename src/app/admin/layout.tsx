@@ -1,5 +1,7 @@
+import { Suspense } from "react";
 import { requireAdminContext, requireSession } from "@/lib/auth/server-context";
 import { AdminAppLayout } from "@/shared/components/AppShell/AdminAppLayout";
+import { AppRouteFallback } from "@/shared/components/AppRouteFallback/AppRouteFallback";
 
 export default async function AdminAreaLayout({
   children,
@@ -9,5 +11,9 @@ export default async function AdminAreaLayout({
   await requireAdminContext();
   const session = await requireSession();
 
-  return <AdminAppLayout userName={session.fullName}>{children}</AdminAppLayout>;
+  return (
+    <AdminAppLayout userName={session.fullName}>
+      <Suspense fallback={<AppRouteFallback />}>{children}</Suspense>
+    </AdminAppLayout>
+  );
 }

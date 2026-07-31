@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import {
+  Alert,
   Button,
   Checkbox,
   Group,
   NumberInput,
+  Select,
   SimpleGrid,
   Stack,
   TextInput,
@@ -15,28 +17,48 @@ import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { PageHeader } from "@/shared/components/PageHeader/PageHeader";
 import capraUi from "@/shared/styles/capra-ui.module.css";
+import { sendTestAlertEmailAction } from "@/features/notifications/actions/notification.actions";
 import { updateSettingsAction } from "../actions/settings.actions";
+import { updateSettingsSchema } from "../schemas/settings.schema";
 import type { FarmSettings } from "../types/settings.types";
+import { settingsToFormValues, TIMEZONE_OPTIONS } from "../utils/settings-defaults";
 import styles from "./SettingsPage.module.css";
+
+function validateSettingsForm(values: ReturnType<typeof settingsToFormValues>) {
+  const parsed = updateSettingsSchema.safeParse(values);
+  if (parsed.success) return {};
+
+  const errors: Record<string, string> = {};
+  for (const issue of parsed.error.issues) {
+    const key = issue.path[0];
+    if (typeof key === "string" && !errors[key]) {
+      errors[key] = issue.message;
+    }
+  }
+  return errors;
+}
 
 type SettingsPageProps = {
   settings: FarmSettings;
   userEmail?: string;
   readOnly?: boolean;
+  loadWarning?: string | null;
+  emailConfigured?: boolean;
 };
 
-export function SettingsPage({ settings, userEmail, readOnly = false }: SettingsPageProps) {
+export function SettingsPage({
+  settings,
+  userEmail,
+  readOnly = false,
+  loadWarning = null,
+  emailConfigured = false,
+}: SettingsPageProps) {
   const [pending, setPending] = useState(false);
+  const [testPending, setTestPending] = useState(false);
+
   const form = useForm({
-    initialValues: {
-      farmName: settings.farmName,
-      timezone: settings.timezone,
-      alertEmail: settings.alertEmail,
-      notifyPush: settings.notifyPush,
-      notifyEmail: settings.notifyEmail,
-      temperatureHighC: settings.temperatureHighC,
-      ammoniaMaxPpm: settings.ammoniaMaxPpm,
-    },
+    initialValues: settingsToFormValues(settings),
+    validate: validateSettingsForm,
   });
 
   const handleSubmit = form.onSubmit((values) => {
@@ -45,7 +67,14 @@ export function SettingsPage({ settings, userEmail, readOnly = false }: Settings
       try {
         const result = await updateSettingsAction(values);
         if (result.ok) {
-          notifications.show({ color: "green", message: "Đã lưu cài đặt" });
+          form.setValues(settingsToFormValues(result.data.settings));
+          notifications.show({ color: "green", message: "Đã lưu cài đặt vào Supabase" });
+          if (result.data.emailMessage) {
+            notifications.show({
+              color: result.data.emailSent ? "green" : "yellow",
+              message: result.data.emailMessage,
+            });
+          }
         } else {
           notifications.show({ color: "red", message: result.message });
         }
@@ -54,6 +83,29 @@ export function SettingsPage({ settings, userEmail, readOnly = false }: Settings
       }
     })();
   });
+
+  const handleTestEmail = () => {
+    void (async () => {
+      setTestPending(true);
+      try {
+        const saveResult = await updateSettingsAction(form.values);
+        if (!saveResult.ok) {
+          notifications.show({ color: "red", message: saveResult.message });
+          return;
+        }
+        form.setValues(settingsToFormValues(saveResult.data.settings));
+
+        const testResult = await sendTestAlertEmailAction();
+        if (testResult.ok) {
+          notifications.show({ color: "green", message: testResult.data.message });
+        } else {
+          notifications.show({ color: "red", message: testResult.message });
+        }
+      } finally {
+        setTestPending(false);
+      }
+    })();
+  };
 
   const fieldLock = readOnly ? { readOnly: true } : {};
   const controlLock = readOnly ? { disabled: true } : {};
@@ -64,10 +116,26 @@ export function SettingsPage({ settings, userEmail, readOnly = false }: Settings
         title="Cài đặt trại"
         description={
           readOnly
-            ? "Xem cấu hình mẫu — đăng nhập để chỉnh sửa"
-            : "Cài đặt được lưu theo trại trên hệ thống. Email cảnh báo tự động sẽ được bật trong bản cập nhật tiếp theo."
+            ? "Xem cấu hình mẫu — đăng nhập để chỉnh sửa và lưu lên Supabase"
+            : "Thông tin trại, thông báo và ngưỡng cảnh báo — lưu theo trại trên Supabase."
         }
       />
+
+      {loadWarning ? (
+        <Alert color="yellow" variant="light">
+          {loadWarning}
+        </Alert>
+      ) : null}
+
+      {!readOnly && !emailConfigured ? (
+        <Alert color="blue" variant="light">
+          Để gửi email thật, thêm <strong>RESEND_API_KEY</strong> vào <strong>.env.local</strong>{" "}
+          (đăng ký miễn phí tại resend.com). Mặc định gửi từ{" "}
+          <strong>onboarding@resend.dev</strong> — chỉ gửi được tới email đã xác minh trên Resend
+          cho đến khi bạn thêm domain riêng.
+        </Alert>
+      ) : null}
+
       <form
         className={`${capraUi.capraCard} ${styles.form}`}
         onSubmit={readOnly ? (e) => e.preventDefault() : handleSubmit}
@@ -78,8 +146,19 @@ export function SettingsPage({ settings, userEmail, readOnly = false }: Settings
               Thông tin trại
             </Title>
             <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md" className={styles.fieldGrid}>
-              <TextInput label="Tên trại" {...fieldLock} {...form.getInputProps("farmName")} />
-              <TextInput label="Múi giờ" {...fieldLock} {...form.getInputProps("timezone")} />
+              <TextInput
+                label="Tên trại"
+                placeholder="VD: Trang trại CapraCare"
+                {...fieldLock}
+                {...form.getInputProps("farmName")}
+              />
+              <Select
+                label="Múi giờ"
+                data={[...TIMEZONE_OPTIONS]}
+                allowDeselect={false}
+                {...controlLock}
+                {...form.getInputProps("timezone")}
+              />
             </SimpleGrid>
           </section>
 
@@ -92,6 +171,7 @@ export function SettingsPage({ settings, userEmail, readOnly = false }: Settings
                 <TextInput
                   label="Email nhận cảnh báo"
                   description="Địa chỉ nhận thông báo khi vượt ngưỡng nhiệt độ hoặc NH₃"
+                  placeholder="email@example.com"
                   flex={1}
                   miw={240}
                   {...fieldLock}
@@ -111,12 +191,13 @@ export function SettingsPage({ settings, userEmail, readOnly = false }: Settings
               <div className={styles.notifyGroup}>
                 <Checkbox
                   label="Bật cảnh báo qua email"
-                  description="Gửi email khi có cảnh báo môi trường (sắp có)"
+                  description="Gửi email thật khi lưu cài đặt và khi nhiệt độ/NH₃ vượt ngưỡng"
                   {...controlLock}
                   {...form.getInputProps("notifyEmail", { type: "checkbox" })}
                 />
                 <Checkbox
-                  label="Thông báo đẩy"
+                  label="Thông báo đẩy (push)"
+                  description="Nhận thông báo trên trình duyệt/thiết bị"
                   {...controlLock}
                   {...form.getInputProps("notifyPush", { type: "checkbox" })}
                 />
@@ -133,6 +214,8 @@ export function SettingsPage({ settings, userEmail, readOnly = false }: Settings
                 label="Ngưỡng nhiệt độ cao"
                 suffix=" °C"
                 decimalScale={1}
+                min={15}
+                max={45}
                 {...controlLock}
                 {...form.getInputProps("temperatureHighC")}
               />
@@ -140,6 +223,8 @@ export function SettingsPage({ settings, userEmail, readOnly = false }: Settings
                 label="Ngưỡng NH₃ tối đa"
                 suffix=" ppm"
                 decimalScale={1}
+                min={1}
+                max={50}
                 {...controlLock}
                 {...form.getInputProps("ammoniaMaxPpm")}
               />
@@ -148,7 +233,16 @@ export function SettingsPage({ settings, userEmail, readOnly = false }: Settings
 
           {!readOnly ? (
             <Group justify="flex-end" className={styles.actions}>
-              <Button type="submit" loading={pending} className={styles.submitBtn}>
+              <Button
+                type="button"
+                variant="light"
+                loading={testPending}
+                disabled={pending}
+                onClick={handleTestEmail}
+              >
+                Gửi email thử
+              </Button>
+              <Button type="submit" loading={pending} disabled={testPending} className={styles.submitBtn}>
                 Lưu thay đổi
               </Button>
             </Group>
