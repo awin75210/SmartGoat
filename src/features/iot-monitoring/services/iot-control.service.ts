@@ -1,20 +1,30 @@
-import { getDefaultIotGatewayId } from "@/lib/iot/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server-client";
 import {
   IOT_RELAY_ACTUATORS,
   IOT_SERVO_ROOF_KEY,
 } from "../constants/iot-device.constants";
 import type { IotActuatorState } from "../types/iot.types";
+import { iotGatewayService } from "./iot-gateway.service";
+import { iotTelemetryService } from "./iot-telemetry.service";
 
 export class IotControlService {
   async listActuators(farmId: string): Promise<IotActuatorState[]> {
     try {
       const supabase = await createSupabaseServerClient();
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from("iot_actuator_states")
         .select("*")
         .eq("farm_id", farmId)
         .order("actuator_key");
+
+      if (!error && !data?.length) {
+        await iotTelemetryService.ensureDefaultActuators(farmId);
+        ({ data, error } = await supabase
+          .from("iot_actuator_states")
+          .select("*")
+          .eq("farm_id", farmId)
+          .order("actuator_key"));
+      }
 
       if (!error && data?.length) {
         return data.map(mapActuatorRow);
@@ -53,7 +63,7 @@ export class IotControlService {
   }
 
   async setRelay(farmId: string, actuatorKey: string, isOn: boolean) {
-    const deviceId = getDefaultIotGatewayId(farmId);
+    const { deviceId } = await iotGatewayService.resolveGatewayForFarm(farmId);
     const command = isOn ? "on" : "off";
 
     const supabase = await createSupabaseServerClient();
@@ -82,7 +92,7 @@ export class IotControlService {
   }
 
   async setServoRoof(farmId: string, open: boolean) {
-    const deviceId = getDefaultIotGatewayId(farmId);
+    const { deviceId } = await iotGatewayService.resolveGatewayForFarm(farmId);
     const command = open ? "open" : "close";
     const positionPct = open ? 100 : 0;
 
@@ -114,14 +124,15 @@ export class IotControlService {
   }
 
   async getGatewayStatus(farmId: string) {
-    const deviceId = getDefaultIotGatewayId(farmId);
     try {
       const supabase = await createSupabaseServerClient();
       const { data } = await supabase
         .from("devices")
         .select("id, name, status, last_seen_at")
         .eq("farm_id", farmId)
-        .eq("id", deviceId)
+        .eq("device_type", "gateway")
+        .order("created_at", { ascending: true })
+        .limit(1)
         .maybeSingle();
 
       if (data) {
@@ -138,9 +149,10 @@ export class IotControlService {
       // seed fallback below
     }
 
+    const fallback = await iotGatewayService.resolveGatewayForFarm(farmId);
     return {
-      deviceId,
-      deviceName: "Gateway IoT ESP32",
+      deviceId: fallback.deviceId,
+      deviceName: fallback.deviceName,
       online: false,
       lastSeenAt: null,
     };

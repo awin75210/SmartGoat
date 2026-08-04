@@ -2,7 +2,9 @@ import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { AppError } from "@/lib/errors/app-error";
 import { registerAuthUser, removeAuthUsersByFarmId } from "@/features/auth/repositories/seed-auth.repository";
 import { provisionFarmIot, removeFarmIot } from "@/features/iot-monitoring/data/iot.store";
+import { iotTelemetryService } from "@/features/iot-monitoring/services/iot-telemetry.service";
 import { buildDefaultDevicesForFarm } from "../utils/default-farm-devices";
+import { assignOwnerFarmIdByEmail } from "../repositories/assign-owner-farm";
 import { generateFarmId, generateUserId } from "../utils/generate-ids";
 import { createDeviceRepository } from "../repositories/create-device.repository";
 import { createFarmRepository } from "../repositories/create-farm.repository";
@@ -83,15 +85,18 @@ export class AdminService {
     if (usesSupabaseData()) {
       await insertFarmSettings(farmId, input.name, input.ownerEmail);
       await insertDefaultBarns(farmId);
+      await iotTelemetryService.ensureDefaultActuators(farmId);
     }
 
     if (usesSupabaseData()) {
+      const profileLinked = await assignOwnerFarmIdByEmail(input.ownerEmail, farmId);
+      const gatewayId = `${farmId}-gateway`;
       return {
         farm: (await this.farms.getFarmById(farmId)) ?? farm,
         owner: null,
-        note:
-          "Đã tạo trại và bộ IoT mặc định. Tạo tài khoản Supabase Auth với email trên, rồi cập nhật profiles.farm_id = " +
-          farmId,
+        note: profileLinked
+          ? `Đã tạo trại và gán farm_id cho tài khoản ${input.ownerEmail}. Gateway ESP32: ${gatewayId}`
+          : `Đã tạo trại. Tạo tài khoản Supabase Auth với email ${input.ownerEmail}, rồi gán profiles.farm_id = ${farmId}. Gateway ESP32: ${gatewayId}`,
       };
     }
 

@@ -7,6 +7,7 @@ import {
   METRIC_FROM_DB,
 } from "../constants/iot-device.constants";
 import type { IotMetricKey, IotTelemetryPayload } from "../types/iot.types";
+import { iotGatewayService } from "./iot-gateway.service";
 
 const RELAY_KEY_MAP = {
   in1: "relay_in1",
@@ -22,6 +23,15 @@ export class IotTelemetryService {
       throw new Error("Supabase service role chưa cấu hình — không ghi telemetry được");
     }
 
+    const ownerFarmId = await iotGatewayService.resolveFarmForDevice(payload.deviceId);
+    if (!ownerFarmId) {
+      throw new Error("Thiết bị IoT không tồn tại — kiểm tra DEVICE_ID trong firmware");
+    }
+    if (ownerFarmId !== payload.farmId) {
+      throw new Error("FARM_ID không khớp thiết bị đã đăng ký");
+    }
+
+    const farmId = ownerFarmId;
     const recordedAt = payload.recordedAt ?? new Date().toISOString();
     const rows: Array<{
       farm_id: string;
@@ -38,7 +48,7 @@ export class IotTelemetryService {
       if (!(metricKey in METRIC_DB_KEY) && metricKey !== "ammonia") continue;
       const dbKey = metricKey === "ammonia" ? "ammonia" : METRIC_DB_KEY[metricKey as keyof typeof METRIC_DB_KEY];
       rows.push({
-        farm_id: payload.farmId,
+        farm_id: farmId,
         device_id: payload.deviceId,
         metric_key: dbKey,
         value,
@@ -47,7 +57,7 @@ export class IotTelemetryService {
       });
       if (metricKey === "toxicGas") {
         rows.push({
-          farm_id: payload.farmId,
+          farm_id: farmId,
           device_id: payload.deviceId,
           metric_key: "ammonia",
           value,
@@ -66,7 +76,7 @@ export class IotTelemetryService {
       .from("devices")
       .update({ status: "online", last_seen_at: recordedAt })
       .eq("id", payload.deviceId)
-      .eq("farm_id", payload.farmId);
+      .eq("farm_id", farmId);
 
     if (payload.readings.relays) {
       for (const [channel, isOn] of Object.entries(payload.readings.relays)) {
@@ -75,7 +85,7 @@ export class IotTelemetryService {
         await admin
           .from("iot_actuator_states")
           .update({ is_on: Boolean(isOn), status: "online", updated_at: recordedAt })
-          .eq("farm_id", payload.farmId)
+          .eq("farm_id", farmId)
           .eq("actuator_key", actuatorKey);
       }
     }
@@ -90,7 +100,7 @@ export class IotTelemetryService {
           status: "online",
           updated_at: recordedAt,
         })
-        .eq("farm_id", payload.farmId)
+        .eq("farm_id", farmId)
         .eq("actuator_key", IOT_SERVO_ROOF_KEY);
     }
 
@@ -101,10 +111,16 @@ export class IotTelemetryService {
     const admin = tryCreateSupabaseAdminClient();
     if (!admin) throw new Error("Supabase service role chưa cấu hình");
 
+    const farmId = await iotGatewayService.resolveFarmForDevice(deviceId);
+    if (!farmId) {
+      throw new Error("Thiết bị IoT không tồn tại");
+    }
+
     const { data, error } = await admin
       .from("iot_device_commands")
       .select("*")
       .eq("device_id", deviceId)
+      .eq("farm_id", farmId)
       .eq("status", "pending")
       .order("created_at", { ascending: true })
       .limit(20);

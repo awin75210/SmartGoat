@@ -30,12 +30,13 @@ const char* WIFI_SSID = "YOUR_WIFI_SSID";
 const char* WIFI_PASS = "YOUR_WIFI_PASSWORD";
 
 // ─── CapraCare API ──────────────────────────────────────────────────────────
+// Lấy FARM_ID và DEVICE_ID từ trang /app/iot (panel "Trang trại & kết nối ESP32")
 // Dev local: http://192.168.x.x:3000  |  Production: https://your-domain.com
 const char* API_BASE_URL = "http://192.168.1.100:3000";
 const char* IOT_API_KEY = "your-iot-device-api-key";
 
-const char* FARM_ID = "farm-capracare-001";
-const char* DEVICE_ID = "dev-gateway";
+const char* FARM_ID = "farm-capracare-001";      // ← đổi theo tài khoản đăng nhập
+const char* DEVICE_ID = "dev-gateway";           // ← mã gateway của trang trại đó
 
 // ─── GPIO ───────────────────────────────────────────────────────────────────
 const int PIN_RELAY_IN1 = 25;

@@ -1,10 +1,24 @@
 import { DEFAULT_FARM_ID } from "@/lib/config/app.config";
 import { iotControlService } from "./iot-control.service";
+import { iotGatewayService } from "./iot-gateway.service";
 import { createIotRepository } from "../repositories/create-iot.repository";
-import type { IotMonitoringSnapshot, IotTimeRange } from "../types/iot.types";
+import type { IotFarmContext, IotMonitoringSnapshot, IotTimeRange } from "../types/iot.types";
 
 export class IotMonitoringService {
   private readonly repo = createIotRepository();
+
+  async getFarmIotContext(
+    farmId: string,
+    options?: { farmName?: string; ownerEmail?: string },
+  ): Promise<IotFarmContext> {
+    const gateway = await iotGatewayService.resolveGatewayForFarm(farmId);
+    return {
+      farmId,
+      farmName: options?.farmName?.trim() || farmId,
+      gatewayDeviceId: gateway.deviceId,
+      ownerEmail: options?.ownerEmail,
+    };
+  }
 
   async getMonitoringSnapshot(
     farmId: string = DEFAULT_FARM_ID,

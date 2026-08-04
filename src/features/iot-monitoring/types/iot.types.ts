@@ -122,6 +122,13 @@ export type IotActuatorState = {
   updatedAt: string;
 };
 
+export type IotFarmContext = {
+  farmId: string;
+  farmName: string;
+  gatewayDeviceId: string;
+  ownerEmail?: string;
+};
+
 export type IotMonitoringSnapshot = {
   metrics: IotMetric[];
   sparklines: Record<IotMetricKey, IotSparklinePoint[]>;

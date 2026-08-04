@@ -7,9 +7,10 @@ import { LoadingSkeleton } from "@/shared/components/LoadingSkeleton/LoadingSkel
 import type { AlertSummary } from "@/features/alerts/types/alert.types";
 import type { HerdOverviewStats } from "@/features/herd/types/goat-batch.types";
 import { fetchIotMonitoringAction } from "../actions/iot.actions";
-import type { IotMonitoringSnapshot, IotTimeRange } from "../types/iot.types";
+import type { IotFarmContext, IotMonitoringSnapshot, IotTimeRange } from "../types/iot.types";
 import { IotBarnStatus } from "./IotBarnStatus";
 import { IotDeviceControl } from "./IotDeviceControl";
+import { IotFarmContextPanel } from "./IotFarmContextPanel";
 import { IotHerdOverview } from "./IotHerdOverview";
 import { IotLatestAlerts } from "./IotLatestAlerts";
 import { IotMainChart } from "./IotMainChart";
@@ -19,6 +20,7 @@ import styles from "./IotMonitoringPage.module.css";
 
 type IotMonitoringPageProps = {
   initialSnapshot: IotMonitoringSnapshot;
+  farmContext: IotFarmContext;
   latestAlerts: AlertSummary[];
   herdStats: HerdOverviewStats;
   readOnly?: boolean;
@@ -26,6 +28,7 @@ type IotMonitoringPageProps = {
 
 export function IotMonitoringPage({
   initialSnapshot,
+  farmContext,
   latestAlerts,
   herdStats,
   readOnly = false,
@@ -70,7 +73,7 @@ export function IotMonitoringPage({
             </span>
           </div>
           <p className={styles.pageDesc}>
-            Cảm biến realtime · Relay 4CH · Servo mái che · API ESP32
+            {farmContext.farmName} · {farmContext.farmId} · Cảm biến · Relay 4CH · Servo mái che
           </p>
         </div>
         <div className={styles.toolbar}>
@@ -82,6 +85,7 @@ export function IotMonitoringPage({
         <LoadingSkeleton rows={6} />
       ) : (
         <>
+          {!readOnly ? <IotFarmContextPanel context={farmContext} /> : null}
           <IotMetricCards metrics={snapshot.metrics} sparklines={snapshot.sparklines} />
           <IotDeviceControl
             actuators={snapshot.actuators}
