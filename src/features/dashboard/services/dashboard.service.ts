@@ -3,7 +3,7 @@ import { alertService } from "@/features/alerts/services/alert.service";
 import { herdService } from "@/features/herd/services/herd.service";
 import { iotMonitoringService } from "@/features/iot-monitoring/services/iot-monitoring.service";
 import type { AlertSummary } from "@/features/alerts/types/alert.types";
-import type { HerdOverviewStats } from "@/features/herd/types/herd.types";
+import type { HerdOverviewStats } from "@/features/herd/types/goat-batch.types";
 import type { IotMonitoringSnapshot } from "@/features/iot-monitoring/types/iot.types";
 
 export type DashboardData = {

@@ -1,0 +1,67 @@
+.page {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.formCard {
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid light-dark(rgba(26, 58, 92, 0.08), rgba(255, 255, 255, 0.08));
+}
+
+.formBody {
+  padding: 1.35rem 1.5rem 1.5rem;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.section + .section {
+  padding-top: 1.25rem;
+  margin-top: 0.25rem;
+  border-top: 1px solid light-dark(rgba(26, 58, 92, 0.07), rgba(255, 255, 255, 0.06));
+}
+
+.sectionTitle {
+  margin: 0;
+  color: light-dark(#1a3a5c, var(--mantine-color-gray-2));
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.sectionHint {
+  margin-top: -0.35rem;
+}
+
+.fieldGrid {
+  width: 100%;
+}
+
+.genderBlock {
+  gap: 0.5rem;
+}
+
+.genderLabel {
+  color: light-dark(#1a3a5c, var(--mantine-color-gray-3));
+}
+
+.actions {
+  padding: 1rem 1.5rem 1.35rem;
+  border-top: 1px solid light-dark(rgba(26, 58, 92, 0.08), rgba(255, 255, 255, 0.08));
+  background: light-dark(rgba(248, 251, 255, 0.9), rgba(0, 0, 0, 0.12));
+}
+
+@media (max-width: 767px) {
+  .formBody {
+    padding: 1.1rem 1rem 1.25rem;
+  }
+
+  .actions {
+    padding: 0.85rem 1rem 1.1rem;
+  }
+}

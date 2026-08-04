@@ -1,5 +1,5 @@
 import { sendEmail } from "@/lib/email/email.service";
-import { getAppBaseUrl } from "@/lib/email/env";
+import { getAppBaseUrl, isResendSandboxRecipientError } from "@/lib/email/env";
 import { createEmailNotifyRepository } from "../repositories/create-email-notify.repository";
 import type { FarmSettings } from "@/features/settings/types/settings.types";
 import type { IotMetric } from "@/features/iot-monitoring/types/iot.types";
@@ -142,7 +142,14 @@ export class FarmAlertEmailService {
     });
 
     if (!result.ok) {
-      console.error("[email] threshold alert failed", result.error);
+      if (isResendSandboxRecipientError(result.error)) {
+        console.warn(
+          "[email] threshold alert skipped (Resend sandbox — chỉ gửi được tới email tài khoản Resend):",
+          result.error,
+        );
+      } else {
+        console.error("[email] threshold alert failed", result.error);
+      }
       return false;
     }
 

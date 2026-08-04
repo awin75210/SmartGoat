@@ -19,7 +19,24 @@ import { ResponsiveDataView } from "@/shared/components/ResponsiveDataView/Respo
 import { StatusBadge } from "@/shared/components/StatusBadge/StatusBadge";
 import { deleteFarmAction } from "../actions/admin.actions";
 import type { Device, Farm } from "../types/admin.types";
+import type { Barn } from "@/features/herd/types/barn.types";
+import type { GoatBatch } from "@/features/herd/types/goat-batch.types";
+import {
+  BARN_STATUS_LABELS,
+  GOAT_BATCH_GENDER_LABELS,
+  GOAT_BATCH_SOURCE_LABELS,
+  GOAT_BATCH_STATUS_LABELS,
+  GOAT_BATCH_STATUSES,
+} from "@/features/herd/constants/goat-batch.constants";
+import { formatAgeVi, formatBirthDateVi } from "@/features/herd/utils/age.utils";
 import styles from "./AdminFarmDetailPage.module.css";
+
+const BATCH_STATUS_COLORS: Record<(typeof GOAT_BATCH_STATUSES)[number], string> = {
+  active: "#40c057",
+  sold: "#868e96",
+  moved_out: "#fab005",
+  closed: "#e8590c",
+};
 
 const DEVICE_STATUS: Record<Device["status"], { label: string; color: string }> = {
   online: { label: "Hoạt động", color: "#40c057" },
@@ -30,9 +47,11 @@ const DEVICE_STATUS: Record<Device["status"], { label: string; color: string }> 
 type AdminFarmDetailPageProps = {
   farm: Farm;
   devices: Device[];
+  barns: Barn[];
+  batches: GoatBatch[];
 };
 
-export function AdminFarmDetailPage({ farm, devices }: AdminFarmDetailPageProps) {
+export function AdminFarmDetailPage({ farm, devices, barns, batches }: AdminFarmDetailPageProps) {
   const router = useRouter();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -93,9 +112,17 @@ export function AdminFarmDetailPage({ farm, devices }: AdminFarmDetailPageProps)
           </div>
           <div>
             <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
-              Số dê
+              Tổng đàn/lứa
             </Text>
-            <Text fw={700}>{farm.goatCount}</Text>
+            <Text fw={700}>
+              {batches.reduce((sum, b) => sum + b.quantity, 0)} con · {batches.length} lứa
+            </Text>
+          </div>
+          <div>
+            <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
+              Chuồng
+            </Text>
+            <Text fw={700}>{barns.length}</Text>
           </div>
           <div>
             <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
@@ -143,6 +170,116 @@ export function AdminFarmDetailPage({ farm, devices }: AdminFarmDetailPageProps)
                 label={DEVICE_STATUS[d.status].label}
                 color={DEVICE_STATUS[d.status].color}
               />
+            </Stack>
+          )}
+        />
+      </Stack>
+
+      <Stack gap="sm">
+        <Text fw={700}>Chuồng nuôi</Text>
+        <ResponsiveDataView
+          data={barns}
+          getRowKey={(b) => b.id}
+          emptyState={
+            <Text size="sm" c="dimmed">
+              Trại chưa có chuồng nào.
+            </Text>
+          }
+          columns={[
+            { key: "name", header: "Tên chuồng", render: (b) => b.name },
+            {
+              key: "capacity",
+              header: "Sức chứa",
+              render: (b) => (b.capacity ? `${b.capacity} con` : "—"),
+            },
+            {
+              key: "status",
+              header: "Trạng thái",
+              render: (b) => (
+                <StatusBadge
+                  label={BARN_STATUS_LABELS[b.status]}
+                  color={b.status === "active" ? "#40c057" : "#868e96"}
+                />
+              ),
+            },
+          ]}
+          mobileCard={(b) => (
+            <Stack gap={4}>
+              <Text fw={700}>{b.name}</Text>
+              <Text size="sm" c="dimmed">
+                {b.capacity ? `Sức chứa ~${b.capacity} con` : "Chưa cập nhật sức chứa"}
+              </Text>
+              <StatusBadge
+                label={BARN_STATUS_LABELS[b.status]}
+                color={b.status === "active" ? "#40c057" : "#868e96"}
+              />
+            </Stack>
+          )}
+        />
+      </Stack>
+
+      <Stack gap="sm">
+        <Text fw={700}>Đàn / lứa</Text>
+        <ResponsiveDataView
+          data={batches}
+          getRowKey={(b) => b.id}
+          emptyState={
+            <Text size="sm" c="dimmed">
+              Trại chưa có đàn/lứa nào.
+            </Text>
+          }
+          columns={[
+            { key: "code", header: "Mã", render: (b) => b.batchCode },
+            { key: "name", header: "Tên", render: (b) => b.name },
+            {
+              key: "barn",
+              header: "Chuồng",
+              render: (b) => barns.find((br) => br.id === b.barnId)?.name ?? "—",
+            },
+            { key: "breed", header: "Giống", render: (b) => b.breed },
+            {
+              key: "gender",
+              header: "Giới tính",
+              render: (b) => GOAT_BATCH_GENDER_LABELS[b.gender],
+            },
+            {
+              key: "birth",
+              header: "Ngày sinh",
+              render: (b) => formatBirthDateVi(b.birthDate),
+            },
+            { key: "age", header: "Tuổi", render: (b) => formatAgeVi(b.birthDate) },
+            { key: "qty", header: "Số lượng", render: (b) => String(b.quantity) },
+            {
+              key: "source",
+              header: "Nguồn",
+              render: (b) => GOAT_BATCH_SOURCE_LABELS[b.source],
+            },
+            {
+              key: "status",
+              header: "Trạng thái",
+              render: (b) => (
+                <StatusBadge
+                  label={GOAT_BATCH_STATUS_LABELS[b.status]}
+                  color={BATCH_STATUS_COLORS[b.status]}
+                />
+              ),
+            },
+          ]}
+          mobileCard={(b) => (
+            <Stack gap={4}>
+              <Group justify="space-between">
+                <Text fw={700}>{b.name}</Text>
+                <Text size="xs" c="dimmed">
+                  {b.batchCode}
+                </Text>
+              </Group>
+              <StatusBadge
+                label={GOAT_BATCH_STATUS_LABELS[b.status]}
+                color={BATCH_STATUS_COLORS[b.status]}
+              />
+              <Text size="sm">
+                {barns.find((br) => br.id === b.barnId)?.name ?? "—"} · {b.quantity} con
+              </Text>
             </Stack>
           )}
         />

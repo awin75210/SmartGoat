@@ -8,6 +8,7 @@ import { createDeviceRepository } from "../repositories/create-device.repository
 import { createFarmRepository } from "../repositories/create-farm.repository";
 import { createUserRepository } from "../repositories/create-user.repository";
 import { insertFarmSettings } from "../repositories/supabase-farm.repository";
+import { insertDefaultBarns } from "@/features/herd/repositories/supabase-barn-provision";
 import type {
   AdminUser,
   CreateFarmInput,
@@ -81,6 +82,7 @@ export class AdminService {
 
     if (usesSupabaseData()) {
       await insertFarmSettings(farmId, input.name, input.ownerEmail);
+      await insertDefaultBarns(farmId);
     }
 
     if (usesSupabaseData()) {

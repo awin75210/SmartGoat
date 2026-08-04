@@ -1,0 +1,8 @@
+.card {
+  background: light-dark(#fff, var(--mantine-color-dark-6));
+}
+
+.relayCard,
+.servoCard {
+  background: light-dark(rgba(248, 251, 255, 0.6), rgba(0, 0, 0, 0.15));
+}

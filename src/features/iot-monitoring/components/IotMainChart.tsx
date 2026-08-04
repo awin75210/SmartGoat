@@ -20,13 +20,16 @@ type IotMainChartProps = {
 };
 
 export function IotMainChart({ data }: IotMainChartProps) {
+  const firstLabel = data[0]?.label ?? "";
+  const lastLabel = data[data.length - 1]?.label ?? "";
+
   return (
     <Paper radius="md" p="md" className={`${capraUi.capraCard} ${styles.card}`}>
       <Title order={4} className={capraUi.capraCardTitle} mb="xs">
-        Biểu đồ nhiệt độ & độ ẩm (7 ngày qua)
+        Biểu đồ nhiệt độ & độ ẩm
       </Title>
       <Text size="sm" c="dimmed" mb="md">
-        15/07 – 21/07 · Nhiệt độ (°C) và độ ẩm (%)
+        {firstLabel && lastLabel ? `${firstLabel} – ${lastLabel}` : "7 ngày gần nhất"} · Nhiệt độ (°C) và độ ẩm (%)
       </Text>
       <div className={styles.chart}>
         <ResponsiveContainer width="100%" height={320}>

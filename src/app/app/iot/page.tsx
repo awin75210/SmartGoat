@@ -9,11 +9,10 @@ import { settingsService } from "@/features/settings/services/settings.service";
 export default async function IotPage() {
   const session = await resolveAppSession();
   const { farmId, isGuest } = await requireFarmContext();
-  const [initialSnapshot, latestAlerts, herdStats, herdDisplaySummary] = await Promise.all([
+  const [initialSnapshot, latestAlerts, herdStats] = await Promise.all([
     iotMonitoringService.getMonitoringSnapshot(farmId, "7d"),
     alertService.getLatestAlerts(farmId, 5),
     herdService.getOverviewStats(farmId),
-    iotMonitoringService.getHerdDisplaySummary(farmId),
   ]);
 
   if (!isGuest) {
@@ -32,7 +31,7 @@ export default async function IotPage() {
       initialSnapshot={initialSnapshot}
       latestAlerts={latestAlerts}
       herdStats={herdStats}
-      herdDisplaySummary={herdDisplaySummary}
+      readOnly={isGuest}
     />
   );
 }

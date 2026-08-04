@@ -7,6 +7,7 @@ import {
   iotSparklinesStore,
 } from "../data/iot.store";
 import type { IotMetricKey, IotTimeRange } from "../types/iot.types";
+import { IOT_SENSOR_METRICS } from "../constants/iot-device.constants";
 import {
   mapBarnStatusRowToDomain,
   mapEnvironmentSummaryRowToDomain,
@@ -30,13 +31,14 @@ export class SeedIotRepository implements IotRepository {
   }
 
   async getSparklines(farmId: string) {
-    const keys: IotMetricKey[] = ["temperature", "humidity", "airQuality", "light", "ammonia"];
+    const keys: IotMetricKey[] = [...IOT_SENSOR_METRICS, "ammonia"];
     const result = {} as Record<IotMetricKey, ReturnType<typeof mapSparklineRowToDomain>[]>;
     for (const key of keys) {
       result[key] = iotSparklinesStore
         .filter((r) => r.farm_id === farmId && r.metric_key === key)
         .map(mapSparklineRowToDomain);
     }
+    result.ammonia = result.toxicGas ?? [];
     return result;
   }
 

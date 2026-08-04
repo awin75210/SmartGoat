@@ -33,8 +33,8 @@ export function DashboardPage({ data, userName, guestHint }: DashboardPageProps)
       <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} spacing="md">
         <MetricCardShell
           label="Tổng đàn"
-          value={String(data.herdStats.totalGoats)}
-          hint="Con dê đang quản lý"
+          value={String(data.herdStats.totalQuantity)}
+          hint="Tổng số lượng đàn/lứa"
         />
         <MetricCardShell
           label="Cảnh báo mở"
@@ -65,12 +65,12 @@ export function DashboardPage({ data, userName, guestHint }: DashboardPageProps)
         <GridCol span={{ base: 12, md: 6 }}>
           <Paper withBorder radius="md" p="md" className={styles.card}>
             <Title order={4} className={styles.title} mb="md">
-              Sức khỏe đàn
+              Tổng quan đàn/lứa
             </Title>
             <Group grow>
-              <StatBlock label="Khỏe" value={data.herdStats.healthyCount} />
-              <StatBlock label="Theo dõi" value={data.herdStats.monitoringCount} />
-              <StatBlock label="Chăm sóc" value={data.herdStats.needsCareCount} />
+              <StatBlock label="Đang nuôi" value={data.herdStats.activeQuantity} />
+              <StatBlock label="Lứa active" value={data.herdStats.activeBatchCount} />
+              <StatBlock label="Chuồng" value={data.herdStats.barnCount} />
             </Group>
           </Paper>
         </GridCol>

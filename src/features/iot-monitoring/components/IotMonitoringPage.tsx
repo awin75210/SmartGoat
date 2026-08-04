@@ -1,13 +1,15 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Stack } from "@mantine/core";
 import { LoadingSkeleton } from "@/shared/components/LoadingSkeleton/LoadingSkeleton";
 import type { AlertSummary } from "@/features/alerts/types/alert.types";
-import type { HerdOverviewStats } from "@/features/herd/types/herd.types";
+import type { HerdOverviewStats } from "@/features/herd/types/goat-batch.types";
 import { fetchIotMonitoringAction } from "../actions/iot.actions";
 import type { IotMonitoringSnapshot, IotTimeRange } from "../types/iot.types";
 import { IotBarnStatus } from "./IotBarnStatus";
+import { IotDeviceControl } from "./IotDeviceControl";
 import { IotHerdOverview } from "./IotHerdOverview";
 import { IotLatestAlerts } from "./IotLatestAlerts";
 import { IotMainChart } from "./IotMainChart";
@@ -19,15 +21,16 @@ type IotMonitoringPageProps = {
   initialSnapshot: IotMonitoringSnapshot;
   latestAlerts: AlertSummary[];
   herdStats: HerdOverviewStats;
-  herdDisplaySummary: { total: number; monitoring: number; newKids: number };
+  readOnly?: boolean;
 };
 
 export function IotMonitoringPage({
   initialSnapshot,
   latestAlerts,
   herdStats,
-  herdDisplaySummary,
+  readOnly = false,
 }: IotMonitoringPageProps) {
+  const router = useRouter();
   const [snapshot, setSnapshot] = useState(initialSnapshot);
   const [range, setRange] = useState<IotTimeRange>(initialSnapshot.range);
   const [pending, setPending] = useState(false);
@@ -52,18 +55,23 @@ export function IotMonitoringPage({
     })();
   };
 
+  const online = snapshot.gateway?.online ?? false;
+
   return (
     <Stack gap="lg" className={styles.page}>
       <div className={styles.heroRow}>
         <div className={styles.titleBlock}>
           <div className={styles.titleRow}>
             <h1 className={styles.pageTitle}>GIÁM SÁT IoT</h1>
-            <span className={styles.onlineBadge}>
+            <span className={styles.onlineBadge} data-offline={!online || undefined}>
               <span className={styles.pulse} aria-hidden />
-              Kết nối: Online
+              {snapshot.gateway?.deviceName ?? "Gateway ESP32"} —{" "}
+              {online ? "Online" : "Offline"}
             </span>
           </div>
-          <p className={styles.pageDesc}>Theo dõi môi trường chuồng nuôi theo thời gian thực</p>
+          <p className={styles.pageDesc}>
+            Cảm biến realtime · Relay 4CH · Servo mái che · API ESP32
+          </p>
         </div>
         <div className={styles.toolbar}>
           <IotTimeRangeFilter value={range} onChange={handleRangeChange} loading={pending} />
@@ -75,13 +83,19 @@ export function IotMonitoringPage({
       ) : (
         <>
           <IotMetricCards metrics={snapshot.metrics} sparklines={snapshot.sparklines} />
+          <IotDeviceControl
+            actuators={snapshot.actuators}
+            gateway={snapshot.gateway}
+            readOnly={readOnly}
+            onChanged={() => router.refresh()}
+          />
           <div className={styles.chartRow}>
             <IotMainChart data={snapshot.chartSeries} />
             <IotBarnStatus summary={snapshot.environmentSummary} />
           </div>
           <div className={styles.bottomRow}>
             <IotLatestAlerts alerts={latestAlerts} />
-            <IotHerdOverview stats={herdStats} displaySummary={herdDisplaySummary} />
+            <IotHerdOverview stats={herdStats} />
           </div>
         </>
       )}

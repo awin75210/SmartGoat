@@ -1,23 +1,18 @@
 import { Group, Paper, SimpleGrid, Text, Title } from "@mantine/core";
-import { IconBabyCarriage, IconEye, IconUsers } from "@tabler/icons-react";
+import { IconBuilding, IconUsers, IconUsersGroup } from "@tabler/icons-react";
 import capraUi from "@/shared/styles/capra-ui.module.css";
-import type { HerdOverviewStats } from "@/features/herd/types/herd.types";
+import type { HerdOverviewStats } from "@/features/herd/types/goat-batch.types";
 import styles from "./IotHerdOverview.module.css";
 
 type IotHerdOverviewProps = {
   stats: HerdOverviewStats;
-  displaySummary?: { total: number; monitoring: number; newKids: number };
 };
 
-export function IotHerdOverview({ stats, displaySummary }: IotHerdOverviewProps) {
-  const total = displaySummary?.total ?? stats.totalGoats;
-  const monitoring = displaySummary?.monitoring ?? stats.monitoringCount;
-  const newKids = displaySummary?.newKids ?? stats.kidCount;
-
+export function IotHerdOverview({ stats }: IotHerdOverviewProps) {
   const items = [
-    { label: "Tổng đàn", value: total, icon: IconUsers },
-    { label: "Cần theo dõi", value: monitoring, icon: IconEye },
-    { label: "Dê con mới", value: newKids, icon: IconBabyCarriage },
+    { label: "Tổng số lượng", value: stats.totalQuantity, icon: IconUsers },
+    { label: "Lứa đang nuôi", value: stats.activeBatchCount, icon: IconUsersGroup },
+    { label: "Chuồng", value: stats.barnCount, icon: IconBuilding },
   ];
 
   return (

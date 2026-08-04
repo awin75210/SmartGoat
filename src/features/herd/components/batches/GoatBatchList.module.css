@@ -1,0 +1,12 @@
+.root {
+  width: 100%;
+}
+
+.link {
+  color: var(--mantine-color-capraBlue-7);
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+}

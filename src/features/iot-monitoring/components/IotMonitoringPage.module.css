@@ -60,6 +60,18 @@
   border: 1px solid rgba(67, 205, 120, 0.25);
 }
 
+.onlineBadge[data-offline] {
+  background: #f1f3f5;
+  color: #868e96;
+  border-color: rgba(134, 142, 150, 0.25);
+}
+
+.onlineBadge[data-offline] .pulse {
+  background: #868e96;
+  animation: none;
+  box-shadow: none;
+}
+
 .pulse {
   width: 8px;
   height: 8px;

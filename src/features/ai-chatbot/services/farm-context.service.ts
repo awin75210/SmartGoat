@@ -1,5 +1,9 @@
 import { herdService } from "@/features/herd/services/herd.service";
 import { iotMonitoringService } from "@/features/iot-monitoring/services/iot-monitoring.service";
+import {
+  GOAT_BATCH_GENDER_LABELS,
+  GOAT_BATCH_STATUS_LABELS,
+} from "@/features/herd/constants/goat-batch.constants";
 import type { QueryIntent } from "./query-intent.service";
 
 export async function buildFarmContextSnippet(
@@ -25,26 +29,22 @@ export async function buildFarmContextSnippet(
   }
 
   if (intent.needsHerd) {
-    const stats = await herdService.getOverviewStats(farmId);
-    const sick = await herdService.listGoats(farmId, { healthStatus: "sick" });
-    const monitoring = await herdService.listGoats(farmId, { healthStatus: "monitoring" });
+    const [stats, batches] = await Promise.all([
+      herdService.getOverviewStats(farmId),
+      herdService.listBatches(farmId, { status: "active" }),
+    ]);
     chunks.push(
-      `Đàn dê — tổng ${stats.totalGoats} con (đực ${stats.maleCount}, cái ${stats.femaleCount}, dê con ${stats.kidCount}). Khỏe ${stats.healthyCount}, theo dõi ${stats.monitoringCount}, cần chăm ${stats.needsCareCount}.`,
+      `Đàn/lứa — tổng ${stats.totalQuantity} con, ${stats.activeBatchCount} lứa đang nuôi (${stats.activeQuantity} con), ${stats.barnCount} chuồng. Lứa đực ${stats.maleBatchCount}, cái ${stats.femaleBatchCount}, mixed ${stats.mixedBatchCount}.`,
     );
-    if (sick.length) {
+    if (batches.length) {
       chunks.push(
-        `Dê đang ốm (${sick.length}): ${sick
+        `Lứa đang nuôi (${batches.length}): ${batches
           .slice(0, 5)
-          .map((g) => `${g.tagCode} (${g.healthStatus})`)
-          .join(", ")}.`,
-      );
-    }
-    if (monitoring.length) {
-      chunks.push(
-        `Dê đang theo dõi (${monitoring.length}): ${monitoring
-          .slice(0, 5)
-          .map((g) => g.tagCode)
-          .join(", ")}.`,
+          .map(
+            (b) =>
+              `${b.batchCode} — ${b.name}, ${b.quantity} con, ${GOAT_BATCH_GENDER_LABELS[b.gender]}, ${GOAT_BATCH_STATUS_LABELS[b.status]}`,
+          )
+          .join("; ")}.`,
       );
     }
   }

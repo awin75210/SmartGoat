@@ -1,0 +1,82 @@
+.root {
+  width: 100%;
+}
+
+.dateGrid {
+  align-items: flex-start;
+}
+
+.dateGrid :global(.mantine-DateInput-root),
+.dateGrid :global(.mantine-InputWrapper-root) {
+  width: 100%;
+}
+
+.dateInput {
+  min-height: 42px;
+}
+
+.todayButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 42px;
+  padding: 0 12px;
+  border-radius: var(--mantine-radius-default);
+  border: 1px solid light-dark(var(--mantine-color-gray-4), var(--mantine-color-dark-4));
+  background: light-dark(rgba(21, 89, 162, 0.04), rgba(255, 255, 255, 0.04));
+  color: light-dark(#1a3a5c, var(--mantine-color-gray-3));
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    transform 120ms ease;
+  cursor: pointer;
+}
+
+.todayButton:hover:not(:disabled) {
+  background: light-dark(rgba(21, 89, 162, 0.08), rgba(21, 89, 162, 0.16));
+  border-color: light-dark(rgba(21, 89, 162, 0.35), rgba(21, 89, 162, 0.45));
+}
+
+.todayButton:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
+.todayButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.todayButton[data-active] {
+  border-color: var(--mantine-color-capraBlue-5);
+  background: light-dark(rgba(21, 89, 162, 0.1), rgba(21, 89, 162, 0.2));
+}
+
+.todayButton[data-loading] {
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+.todayIcon {
+  flex-shrink: 0;
+  color: var(--mantine-color-capraBlue-6);
+}
+
+.ageBadge {
+  padding: 0.65rem 1rem;
+  border-radius: var(--mantine-radius-md);
+  background: linear-gradient(
+    90deg,
+    light-dark(rgba(21, 89, 162, 0.07), rgba(21, 89, 162, 0.14)) 0%,
+    light-dark(rgba(21, 89, 162, 0.03), rgba(21, 89, 162, 0.08)) 100%
+  );
+  border: 1px solid light-dark(rgba(21, 89, 162, 0.12), rgba(21, 89, 162, 0.2));
+}
+
+.ageLabel {
+  letter-spacing: 0.04em;
+}
+
+.ageValue {
+  flex: 1;
+}

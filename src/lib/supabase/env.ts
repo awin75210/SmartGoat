@@ -21,6 +21,14 @@ export function getSupabaseAnonKey(): string {
   return key;
 }
 
+export function getSupabaseServiceRoleKey(): string | undefined {
+  return process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() || undefined;
+}
+
+export function isSupabaseServiceRoleConfigured(): boolean {
+  return Boolean(getSupabaseServiceRoleKey());
+}
+
 export type AiProvider = "openai" | "gemini" | "groq" | "ollama";
 
 export function getAiProvider(): AiProvider {

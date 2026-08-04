@@ -3,7 +3,9 @@ export type IotTimeRange = "24h" | "7d" | "30d";
 export type IotMetricKey =
   | "temperature"
   | "humidity"
-  | "airQuality"
+  | "toxicGas"
+  | "feedLevel"
+  | "rain"
   | "light"
   | "ammonia";
 
@@ -33,7 +35,7 @@ export type IotChartPointRow = {
   recorded_at: string;
   temperature_c: number;
   humidity_pct: number;
-  ammonia_ppm: number;
+  toxic_gas_ppm: number;
   light_lux: number;
 };
 
@@ -88,7 +90,7 @@ export type IotChartPoint = {
   label: string;
   temperatureC: number;
   humidityPct: number;
-  ammoniaPpm: number;
+  toxicGasPpm: number;
   lightLux: number;
 };
 
@@ -102,11 +104,50 @@ export type BarnStatus = {
   status: "normal" | "attention" | "critical";
 };
 
+export type IotGatewayStatus = {
+  deviceId: string;
+  deviceName: string;
+  online: boolean;
+  lastSeenAt: string | null;
+};
+
+export type IotActuatorState = {
+  actuatorKey: string;
+  name: string;
+  gpio: number | null;
+  deviceType: "relay" | "servo";
+  isOn: boolean;
+  positionPct: number | null;
+  status: "online" | "offline" | "maintenance";
+  updatedAt: string;
+};
+
 export type IotMonitoringSnapshot = {
   metrics: IotMetric[];
   sparklines: Record<IotMetricKey, IotSparklinePoint[]>;
   chartSeries: IotChartPoint[];
   barnStatus: BarnStatus[];
   environmentSummary: IotEnvironmentSummary;
+  gateway: IotGatewayStatus | null;
+  actuators: IotActuatorState[];
   range: IotTimeRange;
+};
+
+export type IotTelemetryPayload = {
+  deviceId: string;
+  farmId: string;
+  readings: Partial<Record<IotMetricKey, number>> & {
+    relays?: Partial<Record<"in1" | "in2" | "in3" | "in4", boolean>>;
+    servoRoof?: number;
+  };
+  recordedAt?: string;
+};
+
+export type IotActuatorCommand = {
+  id: string;
+  actuatorKey: string;
+  command: "on" | "off" | "open" | "close" | "set_position";
+  payload: Record<string, unknown>;
+  status: "pending" | "sent" | "acked" | "failed";
+  createdAt: string;
 };

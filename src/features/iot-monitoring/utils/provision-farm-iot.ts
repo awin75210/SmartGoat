@@ -18,7 +18,15 @@ const CHART_DAYS = [
   "2025-07-21T08:00:00.000Z",
 ];
 
-const METRIC_KEYS: IotMetricKey[] = ["temperature", "humidity", "airQuality", "light", "ammonia"];
+const METRIC_KEYS: IotMetricKey[] = [
+  "temperature",
+  "humidity",
+  "toxicGas",
+  "feedLevel",
+  "rain",
+  "light",
+  "ammonia",
+];
 
 type FarmIotProfile = {
   label: string;
@@ -36,7 +44,9 @@ const FARM_PROFILES: Record<string, FarmIotProfile> = {
     metrics: [
       { key: "temperature", value: 24, status: "Ổn định", trend: "+0.8°C so với hôm qua" },
       { key: "humidity", value: 68, status: "Phù hợp", trend: "+2% so với hôm qua" },
-      { key: "airQuality", value: 32, status: "Tốt", trend: "Ổn định" },
+      { key: "toxicGas", value: 8, status: "An toàn", trend: "−1 ppm so với hôm qua" },
+      { key: "feedLevel", value: 55, status: "Đủ", trend: "−5% so với hôm qua" },
+      { key: "rain", value: 0, status: "Khô", trend: "Không mưa" },
       { key: "light", value: 120, status: "Lý tưởng", trend: "+10 lux so với hôm qua" },
       { key: "ammonia", value: 8, status: "An toàn", trend: "−1 ppm so với hôm qua" },
     ],
@@ -54,7 +64,9 @@ const FARM_PROFILES: Record<string, FarmIotProfile> = {
     metrics: [
       { key: "temperature", value: 27, status: "Hơi cao", trend: "+1.2°C so với hôm qua" },
       { key: "humidity", value: 72, status: "Ẩm", trend: "+3% so với hôm qua" },
-      { key: "airQuality", value: 45, status: "Khá", trend: "+5 AQI so với hôm qua" },
+      { key: "toxicGas", value: 11, status: "Theo dõi", trend: "+2 ppm so với hôm qua" },
+      { key: "feedLevel", value: 38, status: "Sắp hết", trend: "−12% so với hôm qua" },
+      { key: "rain", value: 1, status: "Có mưa", trend: "Mưa nhẹ" },
       { key: "light", value: 95, status: "Đủ sáng", trend: "−5 lux so với hôm qua" },
       { key: "ammonia", value: 11, status: "Theo dõi", trend: "+2 ppm so với hôm qua" },
     ],
@@ -77,7 +89,9 @@ function defaultProfile(farmId: string, farmName?: string): FarmIotProfile {
     metrics: [
       { key: "temperature", value: baseTemp, status: "Ổn định", trend: "Mới cấp thiết bị" },
       { key: "humidity", value: 60 + (seed % 10), status: "Phù hợp", trend: "Mới cấp thiết bị" },
-      { key: "airQuality", value: 35 + (seed % 15), status: "Tốt", trend: "Mới cấp thiết bị" },
+      { key: "toxicGas", value: 6 + (seed % 6), status: "An toàn", trend: "Mới cấp thiết bị" },
+      { key: "feedLevel", value: 40 + (seed % 30), status: "Đủ", trend: "Mới cấp thiết bị" },
+      { key: "rain", value: seed % 2, status: seed % 2 ? "Có mưa" : "Khô", trend: "Mới cấp thiết bị" },
       { key: "light", value: 100 + (seed % 30), status: "Lý tưởng", trend: "Mới cấp thiết bị" },
       { key: "ammonia", value: 6 + (seed % 6), status: "An toàn", trend: "Mới cấp thiết bị" },
     ],
@@ -95,7 +109,9 @@ const METRIC_META: Record<
 > = {
   temperature: { unit: "°C", ideal: "22–28°C" },
   humidity: { unit: "%", ideal: "55–75%" },
-  airQuality: { unit: "AQI", ideal: "AQI < 50" },
+  toxicGas: { unit: "ppm", ideal: "< 15 ppm" },
+  feedLevel: { unit: "%", ideal: "30–70%" },
+  rain: { unit: "", ideal: "Khô (0) / Mưa (1)" },
   light: { unit: "lux", ideal: "100–300 lux" },
   ammonia: { unit: "ppm", ideal: "< 15 ppm" },
 };
@@ -131,7 +147,7 @@ export function buildFarmIotBundle(farmId: string, farmName?: string, nowIso = S
     recorded_at,
     temperature_c: [23, 24, 25, 24, 26, 24, 24][i]! + profile.chartOffsets.temp,
     humidity_pct: [65, 67, 70, 68, 69, 66, 68][i]! + profile.chartOffsets.hum,
-    ammonia_ppm: [7, 8, 9, 8, 10, 8, 8][i]! + profile.chartOffsets.nh3,
+    toxic_gas_ppm: [7, 8, 9, 8, 10, 8, 8][i]! + profile.chartOffsets.nh3,
     light_lux: [110, 115, 125, 118, 130, 122, 120][i]! + profile.chartOffsets.light,
   }));
 

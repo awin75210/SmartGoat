@@ -1,0 +1,16 @@
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  padding: 6px 10px;
+  border-radius: var(--mantine-radius-md);
+  color: var(--mantine-color-capraBlue-7);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.backLink:hover {
+  background: light-dark(rgba(21, 89, 162, 0.08), rgba(255, 255, 255, 0.06));
+}

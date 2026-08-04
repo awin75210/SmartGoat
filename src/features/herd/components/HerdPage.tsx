@@ -1,56 +1,59 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { SimpleGrid, Stack } from "@mantine/core";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Button, SimpleGrid, Stack } from "@mantine/core";
+import { IconPlus } from "@tabler/icons-react";
 import { MetricCardShell } from "@/shared/components/MetricCardShell/MetricCardShell";
 import { PageHeader } from "@/shared/components/PageHeader/PageHeader";
-import type { Goat, HerdListFilter, HerdOverviewStats } from "../types/herd.types";
-import { HerdList } from "./HerdList";
+import type { Barn } from "../types/barn.types";
+import type { GoatBatch, HerdOverviewStats } from "../types/goat-batch.types";
+import { BarnList } from "./barns/BarnList";
+import { GoatBatchList } from "./batches/GoatBatchList";
 
 type HerdPageProps = {
-  goats: Goat[];
+  barns: Barn[];
+  batches: GoatBatch[];
   stats: HerdOverviewStats;
+  readOnly?: boolean;
 };
 
-export function HerdPage({ goats, stats }: HerdPageProps) {
-  const [filter, setFilter] = useState<HerdListFilter>({
-    gender: "all",
-    healthStatus: "all",
-    search: "",
-  });
-
-  const filtered = useMemo(() => {
-    let list = goats;
-    if (filter.gender && filter.gender !== "all") {
-      list = list.filter((g) => g.gender === filter.gender);
-    }
-    if (filter.healthStatus && filter.healthStatus !== "all") {
-      list = list.filter((g) => g.healthStatus === filter.healthStatus);
-    }
-    if (filter.search?.trim()) {
-      const q = filter.search.trim().toLowerCase();
-      list = list.filter(
-        (g) =>
-          g.name.toLowerCase().includes(q) ||
-          g.tagCode.toLowerCase().includes(q) ||
-          g.breed.toLowerCase().includes(q),
-      );
-    }
-    return list;
-  }, [goats, filter]);
+export function HerdPage({ barns, batches, stats, readOnly = false }: HerdPageProps) {
+  const router = useRouter();
 
   return (
     <Stack gap="lg">
-      <PageHeader title="Đàn dê" description="Quản lý hồ sơ và sức khỏe từng con" />
+      <PageHeader
+        title="Đàn dê"
+        description="Quản lý chuồng và đàn/lứa theo ngày sinh, số lượng"
+        actions={
+          !readOnly ? (
+            <Button
+              component={Link}
+              href="/app/herd/new"
+              leftSection={<IconPlus size={16} />}
+              disabled={barns.length === 0}
+            >
+              Thêm đàn
+            </Button>
+          ) : undefined
+        }
+      />
       <SimpleGrid cols={{ base: 2, sm: 3, md: 6 }} spacing="md">
-        <MetricCardShell label="Tổng số" value={String(stats.totalGoats)} />
-        <MetricCardShell label="Đực" value={String(stats.maleCount)} />
-        <MetricCardShell label="Cái" value={String(stats.femaleCount)} />
-        <MetricCardShell label="Dê con" value={String(stats.kidCount)} />
-        <MetricCardShell label="Mang thai" value={String(stats.pregnantCount)} />
-        <MetricCardShell label="Theo dõi" value={String(stats.monitoringCount)} />
+        <MetricCardShell label="Tổng số lượng" value={String(stats.totalQuantity)} />
+        <MetricCardShell label="Đang nuôi" value={String(stats.activeQuantity)} />
+        <MetricCardShell label="Lứa active" value={String(stats.activeBatchCount)} />
+        <MetricCardShell label="Chuồng" value={String(stats.barnCount)} />
+        <MetricCardShell label="Lứa đực" value={String(stats.maleBatchCount)} />
+        <MetricCardShell label="Lứa cái" value={String(stats.femaleBatchCount)} />
       </SimpleGrid>
-      <HerdList goats={filtered} filter={filter} onFilterChange={setFilter} />
+      <BarnList
+        barns={barns}
+        batches={batches}
+        readOnly={readOnly}
+        onChanged={() => router.refresh()}
+      />
+      <GoatBatchList batches={batches} barns={barns} />
     </Stack>
   );
 }

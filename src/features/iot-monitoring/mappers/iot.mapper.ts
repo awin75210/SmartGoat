@@ -45,7 +45,7 @@ export function mapIotChartRowToDomain(row: IotChartPointRow): IotChartPoint {
     label: formatDateVi(row.recorded_at),
     temperatureC: row.temperature_c,
     humidityPct: row.humidity_pct,
-    ammoniaPpm: row.ammonia_ppm,
+    toxicGasPpm: row.toxic_gas_ppm,
     lightLux: row.light_lux,
   };
 }
