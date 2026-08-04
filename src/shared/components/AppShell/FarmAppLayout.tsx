@@ -19,7 +19,6 @@ type FarmAppLayoutProps = {
   userName: string;
   farmName: string;
   notificationCount?: number;
-  isGuest?: boolean;
 };
 
 export function FarmAppLayout({
@@ -27,7 +26,6 @@ export function FarmAppLayout({
   userName,
   farmName,
   notificationCount = 0,
-  isGuest = false,
 }: FarmAppLayoutProps) {
   const { opened, toggle, close } = useMobileNav();
   const { logout: handleLogout } = useLogout();
@@ -53,8 +51,7 @@ export function FarmAppLayout({
             farmName={farmName}
             opened={opened}
             onToggle={toggle}
-            onLogout={isGuest ? undefined : handleLogout}
-            loginHref={isGuest ? "/login" : undefined}
+            onLogout={handleLogout}
             notificationCount={notificationCount}
           />
         </AppShell.Header>

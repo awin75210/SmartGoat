@@ -1,24 +1,15 @@
 import { cookies } from "next/headers";
-import { DEFAULT_FARM_ID, SESSION_COOKIE_NAME } from "@/lib/config/app.config";
+import { SESSION_COOKIE_NAME } from "@/lib/config/app.config";
 import { AppError } from "@/lib/errors/app-error";
 import { getSessionUserFromSupabase } from "@/lib/auth/supabase-auth";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import type { SessionUser } from "@/shared/types/roles";
 import { authService } from "@/features/auth/services/auth.service";
 
-const GUEST_SESSION: SessionUser = {
-  userId: "guest",
-  email: "",
-  fullName: "Khách truy cập",
-  role: "farm_owner",
-  farmId: DEFAULT_FARM_ID,
-};
-
 export type FarmContext = {
   userId: string;
   role: SessionUser["role"];
   farmId: string;
-  isGuest: boolean;
 };
 
 export async function getSessionUser(): Promise<SessionUser | null> {
@@ -56,36 +47,25 @@ export async function requireSession(): Promise<SessionUser> {
   return session;
 }
 
-/** Farm app session: logged-in user or demo guest (seed data, no login). */
-export async function resolveAppSession(): Promise<SessionUser & { isGuest: boolean }> {
-  const session = await getSessionUser();
-  if (session) {
-    return { ...session, isGuest: false };
-  }
-  return { ...GUEST_SESSION, isGuest: true };
+/** App session — bắt buộc đăng nhập, không có chế độ guest/demo. */
+export async function resolveAppSession(): Promise<SessionUser> {
+  return requireSession();
 }
 
 export async function requireFarmContext(): Promise<FarmContext> {
   const session = await resolveAppSession();
   if (session.role !== "farm_owner" || !session.farmId) {
-    throw new AppError("FORBIDDEN");
+    throw new AppError("FORBIDDEN", "Tài khoản chưa được gán trang trại. Liên hệ quản trị viên.");
   }
   return {
     userId: session.userId,
     role: session.role,
     farmId: session.farmId,
-    isGuest: session.isGuest,
   };
 }
 
-export async function requireAuthenticatedFarmContext(): Promise<
-  Omit<FarmContext, "isGuest"> & { isGuest: false }
-> {
-  const ctx = await requireFarmContext();
-  if (ctx.isGuest) {
-    throw new AppError("UNAUTHORIZED");
-  }
-  return { userId: ctx.userId, role: ctx.role, farmId: ctx.farmId, isGuest: false };
+export async function requireAuthenticatedFarmContext(): Promise<FarmContext> {
+  return requireFarmContext();
 }
 
 export async function requireAdminContext(): Promise<{

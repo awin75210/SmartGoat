@@ -51,7 +51,10 @@ export async function proxy(request: NextRequest) {
     if (role === "admin") {
       return NextResponse.redirect(new URL("/admin", request.url));
     }
-    return NextResponse.redirect(new URL("/app", request.url));
+    if (role === "farm_owner") {
+      return NextResponse.redirect(new URL("/app", request.url));
+    }
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
   if (pathname === "/login" && role) {

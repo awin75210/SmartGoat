@@ -11,7 +11,7 @@ export default async function AppAreaLayout({
   children: React.ReactNode;
 }) {
   const session = await resolveAppSession();
-  const { farmId, isGuest } = await requireFarmContext();
+  const { farmId } = await requireFarmContext();
   const [farm, alertCount] = await Promise.all([
     adminService.getFarmById(farmId),
     alertService.countActive(farmId),
@@ -22,7 +22,6 @@ export default async function AppAreaLayout({
       userName={session.fullName}
       farmName={farm?.name ?? "Trang trại"}
       notificationCount={alertCount}
-      isGuest={isGuest}
     >
       <Suspense fallback={<AppRouteFallback />}>{children}</Suspense>
     </FarmAppLayout>

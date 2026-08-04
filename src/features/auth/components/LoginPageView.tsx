@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { APP_NAME, APP_TAGLINE } from "@/lib/config/app.config";
 import { LoginForm } from "@/features/auth/components/LoginForm";
 import { Group, Stack, Text, Title } from "@mantine/core";
@@ -20,12 +19,7 @@ export function LoginPageView() {
         </Stack>
       </div>
       <Group justify="center" align="center" className={styles.formWrap}>
-        <Stack gap="sm" align="center">
-          <LoginForm />
-          <Link href="/app" className={styles.guestLink}>
-            Tiếp tục xem thử không đăng nhập
-          </Link>
-        </Stack>
+        <LoginForm />
       </Group>
     </div>
   );

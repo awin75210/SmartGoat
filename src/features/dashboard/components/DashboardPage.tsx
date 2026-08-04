@@ -8,19 +8,16 @@ import { IotMainChart } from "@/features/iot-monitoring/components/IotMainChart"
 import { IotLatestAlerts } from "@/features/iot-monitoring/components/IotLatestAlerts";
 import { IotMetricCards } from "@/features/iot-monitoring/components/IotMetricCards";
 import type { DashboardData } from "../services/dashboard.service";
-import { GuestDemoBanner } from "./GuestDemoBanner";
 import styles from "./DashboardPage.module.css";
 
 type DashboardPageProps = {
   data: DashboardData;
   userName?: string;
-  guestHint?: boolean;
 };
 
-export function DashboardPage({ data, userName, guestHint }: DashboardPageProps) {
+export function DashboardPage({ data, userName }: DashboardPageProps) {
   return (
     <Stack gap="lg" className={styles.page}>
-      {guestHint ? <GuestDemoBanner /> : null}
       <PageHeader
         title={userName ? `Xin chào, ${userName}` : "Tổng quan trại"}
         description="Ảnh tổng hợp môi trường, đàn dê và cảnh báo"

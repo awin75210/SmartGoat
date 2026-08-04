@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { DEFAULT_FARM_ID, SESSION_COOKIE_NAME, SESSION_ROLE_COOKIE_NAME } from "@/lib/config/app.config";
+import { SESSION_COOKIE_NAME, SESSION_ROLE_COOKIE_NAME } from "@/lib/config/app.config";
 import { AppError } from "@/lib/errors/app-error";
 import { createSupabaseServerClient } from "@/lib/supabase/server-client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
@@ -15,16 +15,12 @@ type ProfileRow = {
 
 function mapProfileToSession(userId: string, authEmail: string | undefined, profile: ProfileRow): SessionUser {
   const role = profile.role;
-  let farmId = profile.farm_id;
-  if (role === "farm_owner" && !farmId) {
-    farmId = DEFAULT_FARM_ID;
-  }
   return {
     userId,
     email: profile.email ?? authEmail ?? "",
     fullName: profile.full_name ?? "Người dùng",
     role,
-    farmId,
+    farmId: profile.farm_id ?? null,
   };
 }
 
