@@ -5,7 +5,7 @@ import { SettingsPage } from "@/features/settings/components/SettingsPage";
 
 export default async function SettingsRoutePage() {
   const session = await resolveAppSession();
-  const { farmId } = await requireFarmContext();
+  const { farmId, isGuest } = await requireFarmContext();
 
   let settings = settingsService.getDefaultSettings(farmId, {
     defaultAlertEmail: session.email,
@@ -15,6 +15,7 @@ export default async function SettingsRoutePage() {
   try {
     settings = await settingsService.getSettings(farmId, {
       defaultAlertEmail: session.email,
+      isGuest,
     });
   } catch (error) {
     console.error("[settings] page load failed", error instanceof Error ? error.message : error);
@@ -24,7 +25,8 @@ export default async function SettingsRoutePage() {
   return (
     <SettingsPage
       settings={settings}
-      userEmail={session.email}
+      userEmail={isGuest ? undefined : session.email}
+      readOnly={isGuest}
       loadWarning={loadWarning}
       emailConfigured={isEmailConfigured()}
     />

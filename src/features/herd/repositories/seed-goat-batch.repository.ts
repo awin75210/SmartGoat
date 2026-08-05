@@ -1,10 +1,17 @@
 import { randomUUID } from "crypto";
 import { AppError } from "@/lib/errors/app-error";
+import { inferDevelopmentStage } from "../utils/stage.utils";
 import {
   mapCreateGoatBatchToRow,
   mapGoatBatchRowToDomain,
+  mapUpdateGoatBatchToRow,
 } from "../mappers/goat-batch.mapper";
-import type { CreateGoatBatchInput, GoatBatchListFilter, GoatBatchRow } from "../types/goat-batch.types";
+import type {
+  CreateGoatBatchInput,
+  GoatBatchListFilter,
+  GoatBatchRow,
+  UpdateGoatBatchInput,
+} from "../types/goat-batch.types";
 import type { BarnRow } from "../types/barn.types";
 import type { GoatBatchRepository } from "./goat-batch.repository";
 import { SeedBarnRepository } from "./seed-barn.repository";
@@ -61,6 +68,14 @@ export class SeedGoatBatchRepository implements GoatBatchRepository {
     return mapGoatBatchRowToDomain(row, await resolveBarnName(farmId, row.barn_id));
   }
 
+  async getBatchByCode(farmId: string, batchCode: string) {
+    const row = getFarmBatches(farmId).find(
+      (b) => b.batch_code.toLowerCase() === batchCode.toLowerCase(),
+    );
+    if (!row) return null;
+    return mapGoatBatchRowToDomain(row, await resolveBarnName(farmId, row.barn_id));
+  }
+
   async listBatchCodes(farmId: string) {
     return getFarmBatches(farmId).map((b) => b.batch_code);
   }
@@ -78,13 +93,25 @@ export class SeedGoatBatchRepository implements GoatBatchRepository {
       throw new AppError("VALIDATION_ERROR", "Mã đàn đã tồn tại");
     }
     const id = randomUUID();
-    const row = mapCreateGoatBatchToRow(farmId, id, input, nowIso);
+    const enriched: CreateGoatBatchInput = {
+      ...input,
+      developmentStage: input.developmentStage ?? inferDevelopmentStage(input.birthDate),
+    };
+    const row = mapCreateGoatBatchToRow(farmId, id, enriched, nowIso);
     getFarmBatches(farmId).push(row);
     return mapGoatBatchRowToDomain(row, barn.name);
   }
+
+  async updateBatch(farmId: string, batchId: string, input: UpdateGoatBatchInput, nowIso: string) {
+    const rows = getFarmBatches(farmId);
+    const idx = rows.findIndex((b) => b.id === batchId);
+    if (idx < 0) throw new AppError("NOT_FOUND", "Không tìm thấy lứa");
+    const patch = mapUpdateGoatBatchToRow(input, nowIso);
+    rows[idx] = { ...rows[idx]!, ...patch } as GoatBatchRow;
+    return mapGoatBatchRowToDomain(rows[idx]!, await resolveBarnName(farmId, rows[idx]!.barn_id));
+  }
 }
 
-/** Share barn store with batch seed when both use seed mode */
 export function linkSeedBarnStore(store: Map<string, BarnRow[]>) {
   void store;
 }

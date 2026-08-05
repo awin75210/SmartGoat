@@ -11,7 +11,7 @@ type PageProps = {
 
 export default async function HandbookArticlePage({ params }: PageProps) {
   const session = await resolveAppSession();
-  await requireFarmContext();
+  const { isGuest } = await requireFarmContext();
   const { articleId } = await params;
 
   let article;
@@ -23,8 +23,10 @@ export default async function HandbookArticlePage({ params }: PageProps) {
       handbookService.getArticle(articleId),
       handbookService.getRelatedArticles(articleId),
     ]);
-    const favoriteIds = await handbookFavoriteService.listFavoriteArticleIds(session.userId);
-    isFavorited = favoriteIds.includes(article.id);
+    if (!isGuest) {
+      const favoriteIds = await handbookFavoriteService.listFavoriteArticleIds(session.userId);
+      isFavorited = favoriteIds.includes(article.id);
+    }
   } catch (error) {
     if (error instanceof AppError && error.code === "NOT_FOUND") {
       notFound();
@@ -36,7 +38,7 @@ export default async function HandbookArticlePage({ params }: PageProps) {
     <HandbookArticleDetail
       article={article}
       relatedArticles={relatedArticles}
-      isGuest={false}
+      isGuest={isGuest}
       isFavorited={isFavorited}
     />
   );

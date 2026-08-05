@@ -44,6 +44,6 @@ export type AlertSummary = {
 };
 
 export type AlertListFilter = {
-  tab: "active" | "resolved" | "all";
+  tab: "active" | "resolved" | "all" | "care";
   level?: AlertLevel | "all";
 };

@@ -42,6 +42,7 @@ export type FarmReport = {
 
 export type ExportReportResult = {
   fileName: string;
-  status: "stub";
+  status: "csv" | "stub";
   message: string;
+  csv?: string;
 };

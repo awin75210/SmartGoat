@@ -8,9 +8,10 @@ import { settingsService } from "@/features/settings/services/settings.service";
 
 export default async function IotPage() {
   const session = await resolveAppSession();
-  const { farmId } = await requireFarmContext();
+  const { farmId, isGuest } = await requireFarmContext();
   const settings = await settingsService.getSettings(farmId, {
     defaultAlertEmail: session.email,
+    isGuest,
   });
 
   const [initialSnapshot, latestAlerts, herdStats, farmContext] = await Promise.all([
@@ -23,10 +24,12 @@ export default async function IotPage() {
     }),
   ]);
 
-  try {
-    await farmAlertEmailService.evaluateMetricThresholds(settings, initialSnapshot.metrics);
-  } catch (error) {
-    console.error("[email] IoT threshold check failed", error instanceof Error ? error.message : error);
+  if (!isGuest) {
+    try {
+      await farmAlertEmailService.evaluateMetricThresholds(settings, initialSnapshot.metrics);
+    } catch (error) {
+      console.error("[email] IoT threshold check failed", error instanceof Error ? error.message : error);
+    }
   }
 
   return (
@@ -35,6 +38,7 @@ export default async function IotPage() {
       farmContext={farmContext}
       latestAlerts={latestAlerts}
       herdStats={herdStats}
+      readOnly={isGuest}
     />
   );
 }

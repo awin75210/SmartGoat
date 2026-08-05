@@ -34,6 +34,17 @@ export function ReportsPage({ report: initialReport }: ReportsPageProps) {
     setExporting(true);
     const result = await exportReportAction(report.period);
     if (result.ok) {
+      if (result.data.status === "csv" && result.data.csv) {
+        const blob = new Blob(["\uFEFF" + result.data.csv], {
+          type: "text/csv;charset=utf-8",
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = result.data.fileName;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
       setExportMessage(result.data.message);
     } else {
       setExportMessage(result.message);

@@ -23,6 +23,7 @@ type IotMonitoringPageProps = {
   farmContext: IotFarmContext;
   latestAlerts: AlertSummary[];
   herdStats: HerdOverviewStats;
+  readOnly?: boolean;
 };
 
 export function IotMonitoringPage({
@@ -30,6 +31,7 @@ export function IotMonitoringPage({
   farmContext,
   latestAlerts,
   herdStats,
+  readOnly = false,
 }: IotMonitoringPageProps) {
   const router = useRouter();
   const [snapshot, setSnapshot] = useState(initialSnapshot);
@@ -89,6 +91,7 @@ export function IotMonitoringPage({
             actuators={snapshot.actuators}
             gateway={snapshot.gateway}
             onChanged={() => router.refresh()}
+            readOnly={readOnly}
           />
           <div className={styles.chartRow}>
             <IotMainChart data={snapshot.chartSeries} />

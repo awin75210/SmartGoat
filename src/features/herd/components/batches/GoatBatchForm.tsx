@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   Button,
+  Checkbox,
   Group,
   LoadingOverlay,
   NumberInput,
@@ -20,7 +21,7 @@ import {
 import { Controller } from "react-hook-form";
 import { notifications } from "@mantine/notifications";
 import { runWithNotification } from "@/shared/utils/async-notification";
-import { createGoatBatchAction } from "../../actions/goat-batch.actions";
+import { createGoatBatchAction } from "../../actions/herd-extended.actions";
 import {
   GOAT_BATCH_GENDER_LABELS,
   GOAT_BATCH_GENDERS,
@@ -42,6 +43,12 @@ import {
   getBarnOccupiedQuantity,
   validateBatchQuantity,
 } from "../../utils/barn-capacity.utils";
+import {
+  DEVELOPMENT_STAGE_LABELS,
+  DEVELOPMENT_STAGES,
+} from "../../constants/development-stage.constants";
+import dayjs from "dayjs";
+import { inferDevelopmentStage } from "../../utils/stage.utils";
 import { startOfToday } from "../../utils/age.utils";
 import { GoatBatchFormHeader } from "./GoatBatchFormHeader";
 import { GoatBatchSummaryCard } from "./GoatBatchSummaryCard";
@@ -63,8 +70,12 @@ export function GoatBatchForm({ barns, batches, readOnly = false }: GoatBatchFor
   const barnId = watch("barn_id");
   const quantity = watch("quantity");
   const status = watch("status");
+  const source = watch("source");
+  const stageOverride = watch("stage_override");
+  const inferredStage = birthDate
+    ? inferDevelopmentStage(dayjs(birthDate).format("YYYY-MM-DD"))
+    : "newborn";
   const ageLabel = useGoatBatchAge(birthDate);
-  const today = startOfToday();
   const submitting = formState.isSubmitting;
   const fieldsDisabled = readOnly || submitting;
 
@@ -93,6 +104,12 @@ export function GoatBatchForm({ barns, batches, readOnly = false }: GoatBatchFor
     value: s,
     label: GOAT_BATCH_SOURCE_LABELS[s],
   }));
+  const stageOptions = DEVELOPMENT_STAGES.map((s) => ({
+    value: s,
+    label: DEVELOPMENT_STAGE_LABELS[s],
+  }));
+  const today = startOfToday();
+
   const statusOptions = GOAT_BATCH_STATUSES.map((s) => ({
     value: s,
     label: GOAT_BATCH_STATUS_LABELS[s],
@@ -281,6 +298,44 @@ export function GoatBatchForm({ barns, batches, readOnly = false }: GoatBatchFor
 
             <section className={styles.section}>
               <Title order={5} className={styles.sectionTitle}>
+                Giai đoạn phát triển
+              </Title>
+              <Text size="sm" c="dimmed" className={styles.sectionHint}>
+                Mặc định tự tính từ ngày sinh: {DEVELOPMENT_STAGE_LABELS[inferredStage]}
+              </Text>
+              <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md" className={styles.fieldGrid}>
+                <Controller
+                  name="stage_override"
+                  control={control}
+                  render={({ field }) => (
+                    <Checkbox
+                      label="Ghi đè giai đoạn tự động"
+                      checked={field.value ?? false}
+                      onChange={(e) => field.onChange(e.currentTarget.checked)}
+                      disabled={fieldsDisabled}
+                    />
+                  )}
+                />
+                {stageOverride ? (
+                  <Controller
+                    name="development_stage"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        label="Giai đoạn"
+                        data={stageOptions}
+                        value={field.value ?? inferredStage}
+                        onChange={field.onChange}
+                        disabled={fieldsDisabled}
+                      />
+                    )}
+                  />
+                ) : null}
+              </SimpleGrid>
+            </section>
+
+            <section className={styles.section}>
+              <Title order={5} className={styles.sectionTitle}>
                 Nguồn gốc & trạng thái
               </Title>
               <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md" className={styles.fieldGrid}>
@@ -318,6 +373,21 @@ export function GoatBatchForm({ barns, batches, readOnly = false }: GoatBatchFor
                   )}
                 />
               </SimpleGrid>
+              {source === "purchased" || source === "transferred" ? (
+                <Controller
+                  name="supplier_info"
+                  control={control}
+                  render={({ field }) => (
+                    <TextInput
+                      mt="md"
+                      label="Thông tin nguồn / NCC"
+                      placeholder="Tên trại, địa chỉ, hóa đơn..."
+                      disabled={fieldsDisabled}
+                      {...field}
+                    />
+                  )}
+                />
+              ) : null}
             </section>
 
             <section className={styles.section}>

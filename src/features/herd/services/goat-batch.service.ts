@@ -7,11 +7,20 @@ import {
   getBarnOccupiedQuantity,
   validateBatchQuantity,
 } from "../utils/barn-capacity.utils";
-import type { CreateGoatBatchInput, GoatBatchListFilter, HerdOverviewStats } from "../types/goat-batch.types";
+import { inferDevelopmentStage } from "../utils/stage.utils";
+import { careReminderService } from "./care-reminder.service";
+import { createHerdExtendedRepository } from "../repositories/create-herd-extended.repository";
+import type {
+  CreateGoatBatchInput,
+  GoatBatchListFilter,
+  HerdOverviewStats,
+  UpdateGoatBatchInput,
+} from "../types/goat-batch.types";
 
 export class GoatBatchService {
   private readonly repo = createGoatBatchRepository();
   private readonly barnRepo = createBarnRepository();
+  private readonly extRepo = createHerdExtendedRepository();
 
   listBatches(farmId: string = DEFAULT_FARM_ID, filter?: GoatBatchListFilter) {
     return this.repo.listBatches(farmId, filter);
@@ -19,6 +28,10 @@ export class GoatBatchService {
 
   getBatch(farmId: string, batchId: string) {
     return this.repo.getBatchById(farmId, batchId);
+  }
+
+  getBatchByCode(farmId: string, batchCode: string) {
+    return this.repo.getBatchByCode(farmId, batchCode);
   }
 
   async suggestBatchCode(farmId: string = DEFAULT_FARM_ID) {
@@ -44,13 +57,47 @@ export class GoatBatchService {
       throw new AppError("VALIDATION_ERROR", capacityError);
     }
 
-    return this.repo.createBatch(farmId, input, new Date().toISOString());
+    const enriched: CreateGoatBatchInput = {
+      ...input,
+      developmentStage: input.developmentStage ?? inferDevelopmentStage(input.birthDate),
+    };
+    const batch = await this.repo.createBatch(farmId, enriched, new Date().toISOString());
+    await careReminderService.syncRemindersForBatch(farmId, batch);
+    return batch;
+  }
+
+  async updateBatch(farmId: string, batchId: string, input: UpdateGoatBatchInput) {
+    const existing = await this.repo.getBatchById(farmId, batchId);
+    if (!existing) throw new AppError("NOT_FOUND", "Không tìm thấy lứa");
+
+    if (input.barnId || input.quantity !== undefined || input.status) {
+      const barnId = input.barnId ?? existing.barnId;
+      const barn = await this.barnRepo.getBarnById(farmId, barnId);
+      if (!barn) throw new AppError("NOT_FOUND", "Không tìm thấy chuồng");
+      const batches = await this.repo.listBatches(farmId);
+      const occupied = getBarnOccupiedQuantity(batches, barnId, batchId);
+      const capacityError = validateBatchQuantity({
+        quantity: input.quantity ?? existing.quantity,
+        barn,
+        occupied,
+        status: input.status ?? existing.status,
+      });
+      if (capacityError) throw new AppError("VALIDATION_ERROR", capacityError);
+    }
+
+    const batch = await this.repo.updateBatch(farmId, batchId, input, new Date().toISOString());
+    if (input.birthDate || input.developmentStage !== undefined) {
+      await careReminderService.syncRemindersForBatch(farmId, batch);
+    }
+    return batch;
   }
 
   async getOverviewStats(farmId: string = DEFAULT_FARM_ID): Promise<HerdOverviewStats> {
-    const [batches, barns] = await Promise.all([
+    const [batches, barns, does, reminders] = await Promise.all([
       this.repo.listBatches(farmId),
       this.barnRepo.listBarns(farmId),
+      this.extRepo.listBreedingDoes(farmId),
+      this.extRepo.listReminders(farmId, "pending"),
     ]);
 
     const activeBatches = batches.filter((b) => b.status === "active");
@@ -62,6 +109,8 @@ export class GoatBatchService {
       maleBatchCount: batches.filter((b) => b.gender === "male").length,
       femaleBatchCount: batches.filter((b) => b.gender === "female").length,
       mixedBatchCount: batches.filter((b) => b.gender === "mixed").length,
+      breedingDoeCount: does.length,
+      pendingReminderCount: reminders.length,
     };
   }
 }

@@ -5,15 +5,17 @@ import { AiChatbotPage } from "@/features/ai-chatbot/components/AiChatbotPage";
 
 export default async function AiAssistantRoutePage() {
   const session = await resolveAppSession();
-  const { farmId } = await requireFarmContext();
+  const { farmId, isGuest } = await requireFarmContext();
   const suggestedPrompts = chatbotService.getSuggestedPrompts();
   const aiApiConfigured = isAiApiConfigured();
-  const initialConversations = await chatbotService.listConversations(session.userId, farmId);
+  const initialConversations = isGuest
+    ? []
+    : await chatbotService.listConversations(session.userId, farmId);
 
   return (
     <AiChatbotPage
       suggestedPrompts={suggestedPrompts}
-      isGuest={false}
+      isGuest={isGuest}
       initialConversations={initialConversations}
       aiApiConfigured={aiApiConfigured}
     />

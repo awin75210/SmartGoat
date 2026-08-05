@@ -2,9 +2,18 @@ import type { GoatBatchStatus } from "../constants/goat-batch.constants";
 import type { Barn } from "../types/barn.types";
 import type { GoatBatch } from "../types/goat-batch.types";
 
-export function getBarnOccupiedQuantity(batches: GoatBatch[], barnId: string): number {
+export function getBarnOccupiedQuantity(
+  batches: GoatBatch[],
+  barnId: string,
+  excludeBatchId?: string,
+): number {
   return batches
-    .filter((batch) => batch.barnId === barnId && batch.status === "active")
+    .filter(
+      (batch) =>
+        batch.barnId === barnId &&
+        batch.status === "active" &&
+        batch.id !== excludeBatchId,
+    )
     .reduce((sum, batch) => sum + batch.quantity, 0);
 }
 

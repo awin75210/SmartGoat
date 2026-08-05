@@ -10,20 +10,24 @@ import {
 import { formatDateTimeVi } from "@/shared/utils/format";
 import { PageHeader } from "@/shared/components/PageHeader/PageHeader";
 import { StatusBadge } from "@/shared/components/StatusBadge/StatusBadge";
+import { CareReminderPanel } from "@/features/herd/components/reminders/CareReminderPanel";
+import type { CareReminder } from "@/features/herd/types/care.types";
 import { markAlertResolvedAction } from "../actions/alert.actions";
 import type { Alert, AlertListFilter } from "../types/alert.types";
 import styles from "./AlertsPage.module.css";
 
 type AlertsPageProps = {
   initialAlerts: Alert[];
+  careReminders?: CareReminder[];
 };
 
-export function AlertsPage({ initialAlerts }: AlertsPageProps) {
+export function AlertsPage({ initialAlerts, careReminders = [] }: AlertsPageProps) {
   const [alerts, setAlerts] = useState(initialAlerts);
   const [filter, setFilter] = useState<AlertListFilter>({ tab: "active", level: "all" });
   const [pending, setPending] = useState(false);
 
   const filtered = alerts.filter((a) => {
+    if (filter.tab === "care") return false;
     if (filter.tab === "active" && a.isResolved) return false;
     if (filter.tab === "resolved" && !a.isResolved) return false;
     if (filter.level && filter.level !== "all" && a.level !== filter.level) return false;
@@ -55,8 +59,13 @@ export function AlertsPage({ initialAlerts }: AlertsPageProps) {
           <Tabs.Tab value="active">Đang mở</Tabs.Tab>
           <Tabs.Tab value="resolved">Đã xử lý</Tabs.Tab>
           <Tabs.Tab value="all">Tất cả</Tabs.Tab>
+          <Tabs.Tab value="care">Lịch chăm sóc ({careReminders.length})</Tabs.Tab>
         </Tabs.List>
       </Tabs>
+      {filter.tab === "care" ? (
+        <CareReminderPanel reminders={careReminders} />
+      ) : (
+        <>
       <Select
         maw={240}
         label="Mức độ"
@@ -109,6 +118,8 @@ export function AlertsPage({ initialAlerts }: AlertsPageProps) {
           </div>
         ))}
       </Stack>
+        </>
+      )}
     </Stack>
   );
 }

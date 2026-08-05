@@ -17,6 +17,9 @@ export const defaultGoatBatchFormValues: GoatBatchFormValues = {
   quantity: 1,
   source: "born_on_farm",
   status: "active",
+  development_stage: undefined,
+  stage_override: false,
+  supplier_info: "",
   notes: "",
 };
 

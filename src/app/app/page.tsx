@@ -7,5 +7,11 @@ export default async function AppDashboardPage() {
   const { farmId } = await requireFarmContext();
   const data = await dashboardService.getDashboard(farmId);
 
-  return <DashboardPage data={data} userName={session.fullName} />;
+  return (
+    <DashboardPage
+      data={data}
+      userName={session.isGuest ? undefined : session.fullName}
+      guestHint={session.isGuest}
+    />
+  );
 }

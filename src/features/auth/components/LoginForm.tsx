@@ -27,15 +27,14 @@ export function LoginForm() {
       setPending(true);
       try {
         const result = await loginAction({ email, password, rememberMe });
-        if (result.ok) {
-          // Full navigation — do not setState after this or React 19 may warn during teardown.
+        if (result?.ok) {
           window.location.assign(result.data.redirectTo);
           return;
         }
         notifications.show({
           color: "red",
           title: "Đăng nhập thất bại",
-          message: result.message,
+          message: result?.message ?? "Không đăng nhập được",
         });
         setPending(false);
       } catch {

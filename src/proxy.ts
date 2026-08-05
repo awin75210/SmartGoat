@@ -37,35 +37,88 @@ function getRoleFromRequest(request: NextRequest): UserRole | null {
   return SESSION_ROLE_MAP[sessionValue] ?? null;
 }
 
+function hasSessionEvidence(request: NextRequest): boolean {
+  if (request.cookies.get(SESSION_COOKIE_NAME)?.value) {
+    return true;
+  }
+  if (isSupabaseConfigured()) {
+    return request.cookies.getAll().some((cookie) => cookie.name.includes("-auth-token"));
+  }
+  return false;
+}
+
+function hasSupabaseAuthCookies(request: NextRequest): boolean {
+  return request.cookies.getAll().some((cookie) => cookie.name.includes("-auth-token"));
+}
+
+function clearSessionCookies(response: NextResponse) {
+  response.cookies.delete(SESSION_COOKIE_NAME);
+  response.cookies.delete(SESSION_ROLE_COOKIE_NAME);
+}
+
+function redirectToLogin(request: NextRequest, pathname: string, error?: string) {
+  const loginUrl = new URL("/login", request.url);
+  loginUrl.searchParams.set("redirect", pathname);
+  loginUrl.searchParams.set("clear", "1");
+  if (error) {
+    loginUrl.searchParams.set("error", error);
+  }
+  const response = NextResponse.redirect(loginUrl);
+  clearSessionCookies(response);
+  return response;
+}
+
+function shouldSkipLoginAutoRedirect(request: NextRequest): boolean {
+  const { searchParams } = request.nextUrl;
+  return searchParams.has("error") || searchParams.has("clear");
+}
+
+function isProtectedPath(pathname: string): boolean {
+  return pathname.startsWith("/app") || pathname.startsWith("/admin");
+}
+
 export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
   let response = NextResponse.next({ request });
 
-  if (isSupabaseConfigured()) {
+  const role = getRoleFromRequest(request);
+  const sessionEvidence = hasSessionEvidence(request);
+
+  // Chỉ refresh Supabase khi có cookie auth và route cần bảo vệ — không gọi mọi request.
+  if (
+    isSupabaseConfigured() &&
+    isProtectedPath(pathname) &&
+    hasSupabaseAuthCookies(request)
+  ) {
     response = await refreshSupabaseSession(request, response);
   }
 
-  const { pathname } = request.nextUrl;
-  const role = getRoleFromRequest(request);
-
-  if (pathname === "/") {
-    if (role === "admin") {
-      return NextResponse.redirect(new URL("/admin", request.url));
-    }
-    if (role === "farm_owner") {
-      return NextResponse.redirect(new URL("/app", request.url));
-    }
-    return NextResponse.redirect(new URL("/login", request.url));
+  if (role && !sessionEvidence && isProtectedPath(pathname)) {
+    return redirectToLogin(request, pathname);
   }
 
-  if (pathname === "/login" && role) {
-    return NextResponse.redirect(new URL(getDefaultRedirectForRole(role), request.url));
+  if (pathname === "/") {
+    if (role === "admin" && sessionEvidence) {
+      return NextResponse.redirect(new URL("/admin", request.url));
+    }
+    return NextResponse.redirect(new URL("/app", request.url));
+  }
+
+  // Không tự redirect khỏi /login khi cần xóa session hoặc có lỗi
+  if (pathname === "/login") {
+    if (shouldSkipLoginAutoRedirect(request)) {
+      const cleared = NextResponse.next({ request });
+      clearSessionCookies(cleared);
+      return cleared;
+    }
+    if (role && sessionEvidence) {
+      return NextResponse.redirect(new URL(getDefaultRedirectForRole(role), request.url));
+    }
   }
 
   if (!canAccessPath(role, pathname)) {
     if (!role) {
-      const loginUrl = new URL("/login", request.url);
-      loginUrl.searchParams.set("redirect", pathname);
-      return NextResponse.redirect(loginUrl);
+      return redirectToLogin(request, pathname);
     }
     return NextResponse.redirect(new URL(getDefaultRedirectForRole(role), request.url));
   }

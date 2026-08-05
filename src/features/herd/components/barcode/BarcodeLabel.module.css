@@ -1,0 +1,24 @@
+.root {
+  max-width: 320px;
+}
+
+.label {
+  background: #fff;
+}
+
+.bars {
+  width: 100%;
+  max-width: 260px;
+  height: 48px;
+}
+
+@media print {
+  .root button {
+    display: none !important;
+  }
+
+  .label {
+    border: 1px solid #000;
+    box-shadow: none;
+  }
+}

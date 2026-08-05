@@ -4,6 +4,7 @@ import {
   GOAT_BATCH_SOURCES,
   GOAT_BATCH_STATUSES,
 } from "../constants/goat-batch.constants";
+import { DEVELOPMENT_STAGES } from "../constants/development-stage.constants";
 import {
   getBarnOccupiedQuantity,
   validateBatchQuantity,
@@ -31,6 +32,9 @@ const goatBatchFieldsSchema = {
     .min(1, "Số lượng tối thiểu 1"),
   source: z.enum(GOAT_BATCH_SOURCES),
   status: z.enum(GOAT_BATCH_STATUSES).default("active"),
+  development_stage: z.enum(DEVELOPMENT_STAGES).optional(),
+  stage_override: z.boolean().optional(),
+  supplier_info: z.string().trim().max(500).optional().nullable(),
   notes: z.string().trim().max(500).optional().nullable(),
 };
 
@@ -50,6 +54,9 @@ const goatBatchFormBaseSchema = z.object({
   quantity: goatBatchFieldsSchema.quantity,
   source: goatBatchFieldsSchema.source,
   status: z.enum(GOAT_BATCH_STATUSES),
+  development_stage: z.enum(DEVELOPMENT_STAGES).optional(),
+  stage_override: z.boolean().optional(),
+  supplier_info: z.string().trim().max(500),
   notes: z.string().trim().max(500),
 });
 
@@ -110,6 +117,9 @@ export function goatBatchFormToPayload(values: GoatBatchFormValues) {
     quantity: values.quantity,
     source: values.source,
     status: values.status,
+    development_stage: values.development_stage,
+    stage_override: values.stage_override,
+    supplier_info: values.supplier_info || null,
     notes: values.notes || null,
   });
 }

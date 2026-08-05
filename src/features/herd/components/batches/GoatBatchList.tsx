@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Group, Paper, Select, Stack, Text, TextInput } from "@mantine/core";
 import { ResponsiveDataView } from "@/shared/components/ResponsiveDataView/ResponsiveDataView";
 import { StatusBadge } from "@/shared/components/StatusBadge/StatusBadge";
@@ -10,6 +11,7 @@ import {
   GOAT_BATCH_STATUS_LABELS,
   GOAT_BATCH_STATUSES,
 } from "../../constants/goat-batch.constants";
+import { DEVELOPMENT_STAGE_LABELS } from "../../constants/development-stage.constants";
 import type { Barn } from "../../types/barn.types";
 import type { GoatBatch, GoatBatchListFilter } from "../../types/goat-batch.types";
 import { formatAgeVi, formatBirthDateVi } from "../../utils/age.utils";
@@ -28,6 +30,7 @@ type GoatBatchListProps = {
 };
 
 export function GoatBatchList({ batches, barns }: GoatBatchListProps) {
+  const router = useRouter();
   const [filter, setFilter] = useState<GoatBatchListFilter>({
     search: "",
     status: "all",
@@ -112,6 +115,7 @@ export function GoatBatchList({ batches, barns }: GoatBatchListProps) {
         <ResponsiveDataView
           data={filtered}
           getRowKey={(b) => b.id}
+          onRowClick={(b) => router.push(`/app/herd/batches/${b.id}`)}
           emptyState={
             <Text size="sm" c="dimmed">
               Chưa có đàn/lứa nào. Tạo chuồng rồi bấm 「Thêm đàn」 để bắt đầu.
@@ -120,6 +124,11 @@ export function GoatBatchList({ batches, barns }: GoatBatchListProps) {
           columns={[
             { key: "code", header: "Mã", render: (b) => b.batchCode },
             { key: "name", header: "Tên đàn", render: (b) => <Text fw={600}>{b.name}</Text> },
+            {
+              key: "stage",
+              header: "Giai đoạn",
+              render: (b) => DEVELOPMENT_STAGE_LABELS[b.effectiveStage],
+            },
             {
               key: "barn",
               header: "Chuồng",
@@ -161,10 +170,11 @@ export function GoatBatchList({ batches, barns }: GoatBatchListProps) {
           mobileCard={(b) => (
             <Stack gap={4}>
               <Group justify="space-between" wrap="nowrap">
-                <Text fw={700}>{b.name}</Text>
-                <Text size="xs" c="dimmed">
-                  {b.batchCode}
-                </Text>
+              <Text fw={700}>{b.name}</Text>
+              <Text size="xs" c="dimmed">
+                {b.batchCode}
+              </Text>
+              <Text size="xs">{DEVELOPMENT_STAGE_LABELS[b.effectiveStage]}</Text>
               </Group>
               <StatusBadge
                 label={GOAT_BATCH_STATUS_LABELS[b.status]}

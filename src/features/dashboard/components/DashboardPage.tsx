@@ -1,25 +1,28 @@
 "use client";
 
 import Link from "next/link";
-import { Grid, GridCol, Group, Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
+import { Grid, GridCol, Group, Paper, SimpleGrid, Stack, Title } from "@mantine/core";
+import { CareReminderPanel } from "@/features/herd/components/reminders/CareReminderPanel";
 import { MetricCardShell } from "@/shared/components/MetricCardShell/MetricCardShell";
 import { PageHeader } from "@/shared/components/PageHeader/PageHeader";
 import { IotMainChart } from "@/features/iot-monitoring/components/IotMainChart";
 import { IotLatestAlerts } from "@/features/iot-monitoring/components/IotLatestAlerts";
 import { IotMetricCards } from "@/features/iot-monitoring/components/IotMetricCards";
 import type { DashboardData } from "../services/dashboard.service";
+import { GuestDemoBanner } from "./GuestDemoBanner";
 import styles from "./DashboardPage.module.css";
 
 type DashboardPageProps = {
   data: DashboardData;
   userName?: string;
+  guestHint?: boolean;
 };
 
-export function DashboardPage({ data, userName }: DashboardPageProps) {
+export function DashboardPage({ data, userName, guestHint }: DashboardPageProps) {
   return (
     <Stack gap="lg" className={styles.page}>
-      <PageHeader
-        title={userName ? `Xin chào, ${userName}` : "Tổng quan trại"}
+      {guestHint ? <GuestDemoBanner /> : null}
+      <PageHeader        title={userName ? `Xin chào, ${userName}` : "Tổng quan trại"}
         description="Ảnh tổng hợp môi trường, đàn dê và cảnh báo"
         actions={
           <Link href="/app/iot" className={styles.inlineLink}>
@@ -61,30 +64,18 @@ export function DashboardPage({ data, userName }: DashboardPageProps) {
         </GridCol>
         <GridCol span={{ base: 12, md: 6 }}>
           <Paper withBorder radius="md" p="md" className={styles.card}>
-            <Title order={4} className={styles.title} mb="md">
-              Tổng quan đàn/lứa
-            </Title>
-            <Group grow>
-              <StatBlock label="Đang nuôi" value={data.herdStats.activeQuantity} />
-              <StatBlock label="Lứa active" value={data.herdStats.activeBatchCount} />
-              <StatBlock label="Chuồng" value={data.herdStats.barnCount} />
+            <Group justify="space-between" mb="md">
+              <Title order={4} className={styles.title}>
+                Nhắc chăm sóc sắp tới
+              </Title>
+              <Link href="/app/herd" className={styles.inlineLink}>
+                Đàn & Nhật ký
+              </Link>
             </Group>
+            <CareReminderPanel reminders={data.upcomingReminders} compact readOnly />
           </Paper>
         </GridCol>
       </Grid>
-    </Stack>
-  );
-}
-
-function StatBlock({ label, value }: { label: string; value: number }) {
-  return (
-    <Stack gap={2} align="center" className={styles.stat}>
-      <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
-        {label}
-      </Text>
-      <Text fw={700} size="xl" className={styles.statValue}>
-        {value}
-      </Text>
     </Stack>
   );
 }

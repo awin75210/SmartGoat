@@ -22,7 +22,7 @@ export const FARM_NAV_ITEMS: AppNavItem[] = [
   { label: "Giám sát IoT", href: "/app/iot", icon: IconDeviceAnalytics },
   { label: "Trợ lý AI", href: "/app/ai-assistant", icon: IconMessageChatbot },
   { label: "Sổ tay điện tử", href: "/app/handbook", icon: IconBook },
-  { label: "Đàn dê", href: "/app/herd", icon: IconUsers },
+  { label: "Đàn & Nhật ký", href: "/app/herd", icon: IconUsers },
   { label: "Cảnh báo", href: "/app/alerts", icon: IconBell },
   { label: "Báo cáo", href: "/app/reports", icon: IconChartBar },
   { label: "Cài đặt", href: "/app/settings", icon: IconSettings },

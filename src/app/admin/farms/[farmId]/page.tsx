@@ -3,6 +3,8 @@ import { adminService } from "@/features/admin/services/admin.service";
 import { AdminFarmDetailPage } from "@/features/admin/components/AdminFarmDetailPage";
 import { barnService } from "@/features/herd/services/barn.service";
 import { goatBatchService } from "@/features/herd/services/goat-batch.service";
+import { breedingDoeService } from "@/features/herd/services/breeding-doe.service";
+import { journalService } from "@/features/herd/services/journal.service";
 
 type PageProps = {
   params: Promise<{ farmId: string }>;
@@ -10,11 +12,13 @@ type PageProps = {
 
 export default async function AdminFarmDetailRoutePage({ params }: PageProps) {
   const { farmId } = await params;
-  const [farm, devices, barns, batches] = await Promise.all([
+  const [farm, devices, barns, batches, does, journal] = await Promise.all([
     adminService.getFarmById(farmId),
     adminService.listDevices(farmId),
     barnService.listBarns(farmId),
     goatBatchService.listBatches(farmId),
+    breedingDoeService.listDoes(farmId),
+    journalService.listEntries(farmId, { limit: 50 }),
   ]);
 
   if (!farm) {
@@ -22,6 +26,13 @@ export default async function AdminFarmDetailRoutePage({ params }: PageProps) {
   }
 
   return (
-    <AdminFarmDetailPage farm={farm} devices={devices} barns={barns} batches={batches} />
+    <AdminFarmDetailPage
+      farm={farm}
+      devices={devices}
+      barns={barns}
+      batches={batches}
+      does={does}
+      journal={journal}
+    />
   );
 }

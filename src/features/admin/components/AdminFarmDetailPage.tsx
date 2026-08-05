@@ -21,6 +21,10 @@ import { deleteFarmAction } from "../actions/admin.actions";
 import type { Device, Farm } from "../types/admin.types";
 import type { Barn } from "@/features/herd/types/barn.types";
 import type { GoatBatch } from "@/features/herd/types/goat-batch.types";
+import type { BreedingDoe } from "@/features/herd/types/breeding-doe.types";
+import type { JournalEntry } from "@/features/herd/types/journal.types";
+import { JOURNAL_ENTRY_TYPE_LABELS } from "@/features/herd/constants/journal.constants";
+import { BREEDING_DOE_STATUS_LABELS } from "@/features/herd/constants/breeding-doe.constants";
 import {
   BARN_STATUS_LABELS,
   GOAT_BATCH_GENDER_LABELS,
@@ -49,9 +53,18 @@ type AdminFarmDetailPageProps = {
   devices: Device[];
   barns: Barn[];
   batches: GoatBatch[];
+  does: BreedingDoe[];
+  journal: JournalEntry[];
 };
 
-export function AdminFarmDetailPage({ farm, devices, barns, batches }: AdminFarmDetailPageProps) {
+export function AdminFarmDetailPage({
+  farm,
+  devices,
+  barns,
+  batches,
+  does,
+  journal,
+}: AdminFarmDetailPageProps) {
   const router = useRouter();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -281,6 +294,44 @@ export function AdminFarmDetailPage({ farm, devices, barns, batches }: AdminFarm
                 {barns.find((br) => br.id === b.barnId)?.name ?? "—"} · {b.quantity} con
               </Text>
             </Stack>
+          )}
+        />
+      </Stack>
+
+      <Stack gap="md">
+        <Text fw={700}>Dê sinh sản ({does.length})</Text>
+        <ResponsiveDataView
+          data={does}
+          getRowKey={(d) => d.id}
+          emptyState={<Text size="sm" c="dimmed">Chưa có dê sinh sản.</Text>}
+          columns={[
+            { key: "tag", header: "Mã", render: (d) => d.tagCode },
+            { key: "name", header: "Tên", render: (d) => d.name },
+            { key: "status", header: "Trạng thái", render: (d) => BREEDING_DOE_STATUS_LABELS[d.status] },
+          ]}
+          mobileCard={(d) => (
+            <Text size="sm">
+              {d.name} · {d.tagCode}
+            </Text>
+          )}
+        />
+      </Stack>
+
+      <Stack gap="md">
+        <Text fw={700}>Nhật ký ({journal.length})</Text>
+        <ResponsiveDataView
+          data={journal}
+          getRowKey={(j) => j.id}
+          emptyState={<Text size="sm" c="dimmed">Chưa có nhật ký.</Text>}
+          columns={[
+            { key: "date", header: "Thời gian", render: (j) => formatDateTimeVi(j.recordedAt) },
+            { key: "type", header: "Loại", render: (j) => JOURNAL_ENTRY_TYPE_LABELS[j.entryType] },
+            { key: "title", header: "Tiêu đề", render: (j) => j.title },
+          ]}
+          mobileCard={(j) => (
+            <Text size="sm">
+              {j.title} · {JOURNAL_ENTRY_TYPE_LABELS[j.entryType]}
+            </Text>
           )}
         />
       </Stack>

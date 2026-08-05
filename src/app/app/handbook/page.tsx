@@ -5,9 +5,11 @@ import { HandbookPage } from "@/features/handbook/components/HandbookPage";
 
 export default async function HandbookRoutePage() {
   const session = await resolveAppSession();
-  await requireFarmContext();
+  const { isGuest } = await requireFarmContext();
   const articles = await handbookService.listArticles();
-  const favoriteIds = await handbookFavoriteService.listFavoriteArticleIds(session.userId);
+  const favoriteIds = isGuest
+    ? []
+    : await handbookFavoriteService.listFavoriteArticleIds(session.userId);
 
-  return <HandbookPage articles={articles} favoriteIds={favoriteIds} isGuest={false} />;
+  return <HandbookPage articles={articles} favoriteIds={favoriteIds} isGuest={isGuest} />;
 }

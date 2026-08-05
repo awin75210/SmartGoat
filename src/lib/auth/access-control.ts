@@ -17,7 +17,7 @@ export function canAccessPath(role: UserRole | null, pathname: string): boolean 
     return role === "admin";
   }
   if (pathname.startsWith("/app")) {
-    return role === "farm_owner";
+    return role === null || role === "farm_owner";
   }
   if (!role) {
     return false;

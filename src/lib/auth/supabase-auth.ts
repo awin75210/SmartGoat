@@ -14,17 +14,17 @@ type ProfileRow = {
 };
 
 function mapProfileToSession(userId: string, authEmail: string | undefined, profile: ProfileRow): SessionUser {
-  const role = profile.role;
   return {
     userId,
     email: profile.email ?? authEmail ?? "",
     fullName: profile.full_name ?? "Người dùng",
-    role,
+    role: profile.role,
     farmId: profile.farm_id ?? null,
   };
 }
 
-export async function getSessionUserFromSupabase(): Promise<SessionUser | null> {
+/** Một lần gọi getUser + profile — không lặp fallback. */
+export async function resolveSupabaseSessionUser(): Promise<SessionUser | null> {
   if (!isSupabaseConfigured()) {
     return null;
   }
@@ -56,6 +56,11 @@ export async function getSessionUserFromSupabase(): Promise<SessionUser | null> 
   }
 }
 
+/** @deprecated use resolveSupabaseSessionUser via getSessionUser cache */
+export async function getSessionUserFromSupabase(): Promise<SessionUser | null> {
+  return resolveSupabaseSessionUser();
+}
+
 export async function signInWithSupabase(input: LoginInput): Promise<SessionUser> {
   if (!isSupabaseConfigured()) {
     throw new AppError("INTERNAL_ERROR");
@@ -81,6 +86,8 @@ export async function signInWithSupabase(input: LoginInput): Promise<SessionUser
   if (!data.user) {
     throw new AppError("UNAUTHORIZED");
   }
+
+  await supabase.auth.getSession();
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
