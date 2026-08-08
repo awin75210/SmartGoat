@@ -1,5 +1,7 @@
 import { requireFarmContext, resolveAppSession } from "@/lib/auth/server-context";
-import { isEmailConfigured } from "@/lib/email/env";
+import { getAppBaseUrl, isEmailConfigured } from "@/lib/email/env";
+import { isIotDeviceApiConfigured } from "@/lib/iot/env";
+import { iotMonitoringService } from "@/features/iot-monitoring/services/iot-monitoring.service";
 import { settingsService } from "@/features/settings/services/settings.service";
 import { SettingsPage } from "@/features/settings/components/SettingsPage";
 
@@ -22,6 +24,13 @@ export default async function SettingsRoutePage() {
     loadWarning = "Không tải được cài đặt từ Supabase. Đang hiển thị giá trị mặc định.";
   }
 
+  const esp32Context = isGuest
+    ? null
+    : await iotMonitoringService.getFarmIotContext(farmId, {
+        farmName: settings.farmName,
+        ownerEmail: session.email,
+      });
+
   return (
     <SettingsPage
       settings={settings}
@@ -29,6 +38,9 @@ export default async function SettingsRoutePage() {
       readOnly={isGuest}
       loadWarning={loadWarning}
       emailConfigured={isEmailConfigured()}
+      esp32Context={esp32Context}
+      iotApiConfigured={isIotDeviceApiConfigured()}
+      appBaseUrl={getAppBaseUrl()}
     />
   );
 }

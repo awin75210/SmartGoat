@@ -3,6 +3,12 @@
 import Link from "next/link";
 import { Grid, GridCol, Group, Paper, SimpleGrid, Stack, Title } from "@mantine/core";
 import { CareReminderPanel } from "@/features/herd/components/reminders/CareReminderPanel";
+import {
+  findIotMetric,
+  formatIotMetricUnit,
+  formatIotMetricValue,
+  formatIotRecordedAtHint,
+} from "@/features/iot-monitoring/utils/iot-display.utils";
 import { MetricCardShell } from "@/shared/components/MetricCardShell/MetricCardShell";
 import { PageHeader } from "@/shared/components/PageHeader/PageHeader";
 import { IotMainChart } from "@/features/iot-monitoring/components/IotMainChart";
@@ -19,10 +25,14 @@ type DashboardPageProps = {
 };
 
 export function DashboardPage({ data, userName, guestHint }: DashboardPageProps) {
+  const tempMetric = findIotMetric(data.iot.metrics, "temperature");
+  const humMetric = findIotMetric(data.iot.metrics, "humidity");
+
   return (
     <Stack gap="lg" className={styles.page}>
       {guestHint ? <GuestDemoBanner /> : null}
-      <PageHeader        title={userName ? `Xin chào, ${userName}` : "Tổng quan trại"}
+      <PageHeader
+        title={userName ? `Xin chào, ${userName}` : "Tổng quan trại"}
         description="Ảnh tổng hợp môi trường, đàn dê và cảnh báo"
         actions={
           <Link href="/app/iot" className={styles.inlineLink}>
@@ -45,15 +55,15 @@ export function DashboardPage({ data, userName, guestHint }: DashboardPageProps)
         />
         <MetricCardShell
           label="Nhiệt độ hiện tại"
-          value={String(
-            data.iot.metrics.find((m) => m.metricKey === "temperature")?.value ?? "—",
-          )}
-          unit="°C"
+          value={formatIotMetricValue(tempMetric)}
+          unit={formatIotMetricUnit(tempMetric, "temperature")}
+          trendLabel={formatIotRecordedAtHint(tempMetric)}
         />
         <MetricCardShell
           label="Độ ẩm"
-          value={String(data.iot.metrics.find((m) => m.metricKey === "humidity")?.value ?? "—")}
-          unit="%"
+          value={formatIotMetricValue(humMetric)}
+          unit={formatIotMetricUnit(humMetric, "humidity")}
+          trendLabel={formatIotRecordedAtHint(humMetric)}
         />
       </SimpleGrid>
       <IotMetricCards metrics={data.iot.metrics} sparklines={data.iot.sparklines} />

@@ -1,21 +1,14 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server-client";
 import { IOT_SENSOR_METRICS, METRIC_FROM_DB } from "../constants/iot-device.constants";
-import type { IotSensorMetricKey } from "../constants/iot-device.constants";
 import {
   mapBarnStatusRowToDomain,
   mapEnvironmentSummaryRowToDomain,
   mapIotChartRowToDomain,
-  mapSparklineRowToDomain,
 } from "../mappers/iot.mapper";
-import type { IotMetricKey, IotTimeRange } from "../types/iot.types";
+import type { IotTimeRange } from "../types/iot.types";
 import { buildMetricFromReading, emptySparklines } from "../utils/iot-metric.utils";
-import {
-  barnStatusStore,
-  getEnvironmentForFarm,
-  getHerdForFarm,
-} from "../data/iot.store";
+import { barnStatusStore, getHerdForFarm } from "../data/iot.store";
 import type { IotRepository } from "./iot.repository";
-import { SeedIotRepository } from "./seed-iot.repository";
 
 function rangeStart(range: IotTimeRange): Date {
   const now = Date.now();
@@ -23,6 +16,15 @@ function rangeStart(range: IotTimeRange): Date {
     range === "24h" ? 24 * 60 * 60 * 1000 : range === "7d" ? 7 * 86400000 : 30 * 86400000;
   return new Date(now - ms);
 }
+
+const EMPTY_ENVIRONMENT = {
+  farm_id: "",
+  health_percent: 0,
+  health_label: "—",
+  ventilation_status: "—",
+  floor_status: "—",
+  sensors_status: "Chưa có dữ liệu",
+};
 
 export class SupabaseIotRepository implements IotRepository {
   private async client() {
@@ -57,10 +59,6 @@ export class SupabaseIotRepository implements IotRepository {
       }
     }
 
-    if (metrics.length === 0) {
-      return new SeedIotRepository().getMetrics(farmId);
-    }
-
     return metrics;
   }
 
@@ -87,11 +85,6 @@ export class SupabaseIotRepository implements IotRepository {
       result.ammonia = result.toxicGas;
     }
 
-    const hasData = IOT_SENSOR_METRICS.some((k) => (result[k]?.length ?? 0) > 0);
-    if (!hasData) {
-      return new SeedIotRepository().getSparklines(farmId);
-    }
-
     return result;
   }
 
@@ -102,11 +95,12 @@ export class SupabaseIotRepository implements IotRepository {
       .from("iot_sensor_readings")
       .select("metric_key, value, recorded_at")
       .eq("farm_id", farmId)
+      .in("metric_key", ["temperature", "humidity", "toxic_gas", "light"])
       .gte("recorded_at", from)
       .order("recorded_at", { ascending: true });
 
     if (!data?.length) {
-      return new SeedIotRepository().getChartSeries(farmId, range);
+      return [];
     }
 
     const buckets = new Map<
@@ -150,8 +144,7 @@ export class SupabaseIotRepository implements IotRepository {
   async getEnvironmentSummary(farmId: string) {
     const metrics = await this.getMetrics(farmId);
     if (!metrics.length) {
-      const row = getEnvironmentForFarm(farmId);
-      if (row) return mapEnvironmentSummaryRowToDomain(row);
+      return mapEnvironmentSummaryRowToDomain({ ...EMPTY_ENVIRONMENT, farm_id: farmId });
     }
 
     const temp = metrics.find((m) => m.metricKey === "temperature")?.value ?? 0;

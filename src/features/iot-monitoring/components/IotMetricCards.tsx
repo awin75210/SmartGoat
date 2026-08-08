@@ -12,7 +12,11 @@ import {
 import { MetricCardShell } from "@/shared/components/MetricCardShell/MetricCardShell";
 import { IOT_METRIC_LABELS } from "../constants/iot-device.constants";
 import type { IotMetric, IotMetricKey, IotSparklinePoint } from "../types/iot.types";
-import { formatFeedDisplay, formatRainDisplay } from "../utils/iot-metric.utils";
+import {
+  formatIotMetricUnit,
+  formatIotMetricValue,
+  formatIotRecordedAtHint,
+} from "../utils/iot-display.utils";
 import { IotSparklineChart } from "./IotSparklineChart";
 
 const METRIC_META: Record<
@@ -37,18 +41,6 @@ const DISPLAY_ORDER: IotMetricKey[] = [
   "light",
 ];
 
-function formatMetricValue(metric: IotMetric): string {
-  if (metric.metricKey === "temperature") return metric.value.toFixed(1);
-  if (metric.metricKey === "rain") return formatRainDisplay(metric.value);
-  if (metric.metricKey === "feedLevel") return formatFeedDisplay(metric.value);
-  return String(Math.round(metric.value * 10) / 10);
-}
-
-function formatMetricUnit(metric: IotMetric): string | undefined {
-  if (metric.metricKey === "rain" || metric.metricKey === "feedLevel") return undefined;
-  return metric.unit;
-}
-
 type IotMetricCardsProps = {
   metrics: IotMetric[];
   sparklines: Record<IotMetricKey, IotSparklinePoint[]>;
@@ -56,22 +48,28 @@ type IotMetricCardsProps = {
 
 export function IotMetricCards({ metrics, sparklines }: IotMetricCardsProps) {
   const metricMap = new Map(metrics.map((m) => [m.metricKey, m]));
-  const ordered = DISPLAY_ORDER.map((key) => metricMap.get(key)).filter(Boolean) as IotMetric[];
 
   return (
     <SimpleGrid cols={{ base: 1, xs: 2, sm: 2, md: 3, lg: 3 }} spacing="md">
-      {ordered.map((metric) => {
-        const meta = METRIC_META[metric.metricKey];
+      {DISPLAY_ORDER.map((key) => {
+        const metric = metricMap.get(key);
+        const meta = METRIC_META[key];
         const Icon = meta.icon;
+        const showRecordedAt = key === "temperature" || key === "humidity";
+
         return (
           <MetricCardShell
-            key={metric.id}
+            key={key}
             label={meta.label}
-            value={formatMetricValue(metric)}
-            unit={formatMetricUnit(metric)}
-            hint={metric.idealRange}
-            trendLabel={metric.trendLabel === "Realtime" ? undefined : metric.trendLabel}
-            statusLabel={metric.statusLabel === "Ổn định" ? undefined : metric.statusLabel}
+            value={formatIotMetricValue(metric)}
+            unit={formatIotMetricUnit(metric, key)}
+            hint={metric?.idealRange}
+            trendLabel={showRecordedAt ? formatIotRecordedAtHint(metric) : metric?.trendLabel}
+            statusLabel={
+              metric && metric.statusLabel !== "Ổn định" && metric.statusLabel !== "Phù hợp"
+                ? metric.statusLabel
+                : undefined
+            }
             statusColor={meta.color}
             icon={
               <ThemeIcon variant="light" color={meta.themeColor} radius="md" size="lg">
@@ -79,10 +77,12 @@ export function IotMetricCards({ metrics, sparklines }: IotMetricCardsProps) {
               </ThemeIcon>
             }
             sparkline={
-              <IotSparklineChart
-                data={sparklines[metric.metricKey] ?? []}
-                color={meta.color}
-              />
+              metric ? (
+                <IotSparklineChart
+                  data={sparklines[metric.metricKey] ?? []}
+                  color={meta.color}
+                />
+              ) : undefined
             }
           />
         );

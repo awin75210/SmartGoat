@@ -1,4 +1,3 @@
-import { buildInitialIotStores, buildFarmIotBundle } from "../utils/provision-farm-iot";
 import type {
   BarnStatusRow,
   IotChartPointRow,
@@ -7,28 +6,17 @@ import type {
   IotSparklinePointRow,
 } from "../types/iot.types";
 
-const initial = buildInitialIotStores();
-
-export const iotMetricsStore: IotMetricRow[] = initial.metrics;
-export const iotSparklinesStore: IotSparklinePointRow[] = initial.sparklines;
-export const iotChartStore: IotChartPointRow[] = initial.chart;
-export const barnStatusStore: BarnStatusRow[] = initial.barns;
-export const iotEnvironmentStore: IotEnvironmentSummaryRow[] = initial.environments;
+export const iotMetricsStore: IotMetricRow[] = [];
+export const iotSparklinesStore: IotSparklinePointRow[] = [];
+export const iotChartStore: IotChartPointRow[] = [];
+export const barnStatusStore: BarnStatusRow[] = [];
+export const iotEnvironmentStore: IotEnvironmentSummaryRow[] = [];
 export const iotHerdStore: Record<string, { total: number; monitoring: number; newKids: number }> =
-  initial.herds;
+  {};
 
-export function provisionFarmIot(farmId: string, farmName?: string, nowIso?: string): void {
-  if (iotMetricsStore.some((m) => m.farm_id === farmId)) {
-    return;
-  }
-
-  const bundle = buildFarmIotBundle(farmId, farmName, nowIso);
-  iotMetricsStore.push(...bundle.metrics);
-  iotSparklinesStore.push(...bundle.sparklines);
-  iotChartStore.push(...bundle.chart);
-  barnStatusStore.push(...bundle.barns);
-  iotEnvironmentStore.push(bundle.environment);
-  iotHerdStore[farmId] = bundle.herd;
+/** IoT sensor data comes from Supabase / ESP — no in-memory seed. */
+export function provisionFarmIot(_farmId: string, _farmName?: string, _nowIso?: string): void {
+  // no-op
 }
 
 export function getEnvironmentForFarm(farmId: string): IotEnvironmentSummaryRow | undefined {

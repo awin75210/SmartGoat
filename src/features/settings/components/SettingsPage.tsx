@@ -17,6 +17,8 @@ import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { PageHeader } from "@/shared/components/PageHeader/PageHeader";
 import capraUi from "@/shared/styles/capra-ui.module.css";
+import { IotFarmContextPanel } from "@/features/iot-monitoring/components/IotFarmContextPanel";
+import type { IotFarmContext } from "@/features/iot-monitoring/types/iot.types";
 import { sendTestAlertEmailAction } from "@/features/notifications/actions/notification.actions";
 import { updateSettingsAction } from "../actions/settings.actions";
 import { updateSettingsSchema } from "../schemas/settings.schema";
@@ -44,6 +46,9 @@ type SettingsPageProps = {
   readOnly?: boolean;
   loadWarning?: string | null;
   emailConfigured?: boolean;
+  esp32Context?: IotFarmContext | null;
+  iotApiConfigured?: boolean;
+  appBaseUrl?: string;
 };
 
 export function SettingsPage({
@@ -52,6 +57,9 @@ export function SettingsPage({
   readOnly = false,
   loadWarning = null,
   emailConfigured = false,
+  esp32Context = null,
+  iotApiConfigured = false,
+  appBaseUrl,
 }: SettingsPageProps) {
   const [pending, setPending] = useState(false);
   const [testPending, setTestPending] = useState(false);
@@ -134,6 +142,22 @@ export function SettingsPage({
           <strong>onboarding@resend.dev</strong> — chỉ gửi được tới email đã xác minh trên Resend
           cho đến khi bạn thêm domain riêng.
         </Alert>
+      ) : null}
+
+      {readOnly ? (
+        <Alert color="blue" variant="light">
+          Đăng nhập để xem <strong>FARM_ID</strong>, <strong>DEVICE_ID</strong> và hướng dẫn cấu hình ESP32
+          cho trang trại của bạn.
+        </Alert>
+      ) : esp32Context ? (
+        <IotFarmContextPanel
+          context={esp32Context}
+          detailed
+          iotApiConfigured={iotApiConfigured}
+          appBaseUrl={appBaseUrl}
+          title="Cấu hình ESP32 cho trang trại"
+          description="Sao chép các giá trị dưới đây vào sketch Arduino — dữ liệu nhiệt độ/độ ẩm sẽ hiển thị trên dashboard sau khi ESP gửi telemetry."
+        />
       ) : null}
 
       <form

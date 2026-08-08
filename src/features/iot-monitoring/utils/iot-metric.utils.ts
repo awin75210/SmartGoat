@@ -1,3 +1,4 @@
+import { formatDateTimeVi } from "@/shared/utils/format";
 import {
   IOT_METRIC_UNITS,
   IOT_SENSOR_METRICS,
@@ -58,7 +59,7 @@ export function buildMetricFromReading(params: {
     unit: IOT_METRIC_UNITS[params.metricKey],
     statusLabel: evaluateMetricStatus(params.metricKey, params.value),
     idealRange: IDEAL_RANGES[params.metricKey],
-    trendLabel: "Realtime",
+    trendLabel: formatDateTimeVi(params.recordedAt),
     recordedAt: params.recordedAt,
   };
 }

@@ -23,6 +23,23 @@ export function IotMainChart({ data }: IotMainChartProps) {
   const firstLabel = data[0]?.label ?? "";
   const lastLabel = data[data.length - 1]?.label ?? "";
 
+  if (!data.length) {
+    return (
+      <Paper radius="md" p="md" className={`${capraUi.capraCard} ${styles.card}`}>
+        <Title order={4} className={capraUi.capraCardTitle} mb="xs">
+          Biểu đồ nhiệt độ & độ ẩm
+        </Title>
+        <Text size="sm" c="dimmed">
+          Chưa có dữ liệu từ ESP32. Gửi telemetry lên{" "}
+          <Text span fw={600}>
+            /api/iot/telemetry
+          </Text>{" "}
+          để hiển thị biểu đồ.
+        </Text>
+      </Paper>
+    );
+  }
+
   return (
     <Paper radius="md" p="md" className={`${capraUi.capraCard} ${styles.card}`}>
       <Title order={4} className={capraUi.capraCardTitle} mb="xs">

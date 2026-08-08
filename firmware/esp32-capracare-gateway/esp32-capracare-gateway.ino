@@ -106,7 +106,9 @@ void setServoRoofPct(int pct) {
   roofServo.write(angle);
 }
 
-// ─── Sensors (thay bằng driver thật nếu đã lắp) ─────────────────────────────
+// Giá trị test khi chưa gắn DHT22 (đồng bộ CapraCare seed / scripts/post-iot-sample.mjs)
+const float TEST_TEMPERATURE_C = 25.6f;
+const float TEST_HUMIDITY_PCT = 71.0f;
 struct SensorReadings {
   float temperature;
   float humidity;
@@ -119,9 +121,9 @@ struct SensorReadings {
 SensorReadings readSensors() {
   SensorReadings r;
 
-  // TODO: thay bằng DHT.readTemperature() / readHumidity()
-  r.temperature = 24.0f + (random(0, 20) / 10.0f);
-  r.humidity = 65.0f + (random(0, 10));
+  // TODO: thay bằng DHT.readTemperature() / readHumidity() khi đã lắp DHT22
+  r.temperature = TEST_TEMPERATURE_C + (random(0, 10) / 10.0f);
+  r.humidity = TEST_HUMIDITY_PCT + (random(0, 4));
 
   // MQ135: map ADC → ppm (hiệu chuẩn theo môi trường thực)
   int mqRaw = analogRead(PIN_MQ135);
@@ -189,7 +191,11 @@ bool postTelemetry() {
     return true;
   }
 
-  Serial.printf("[telemetry] FAIL HTTP %d\n", code);
+  if (code == 308 || code == 301 || code == 302) {
+    Serial.printf("[telemetry] FAIL HTTP %d — đổi API_BASE_URL sang https:// (Vercel redirect HTTP→HTTPS)\n", code);
+  } else {
+    Serial.printf("[telemetry] FAIL HTTP %d\n", code);
+  }
   return false;
 }
 
